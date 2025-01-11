@@ -46,26 +46,35 @@ async def login_and_scrape(login_url, username, password):
 
             # Sélectionner l'heure "16:00"
             await page.wait_for_selector('#heure')
-            await page.select_option('#heure', '18:00')
+            await page.select_option('#heure', '15:00')
 
             # Attendre la présence du bouton avec le texte "15:00"
             try:
-                bouton = await page.wait_for_selector('//button[contains(text(), "18:00")]', timeout=5000)
+                await page.wait_for_selector('//button[contains(text(), "15:00")]', timeout=5000)
                 print("Trouvé: 15:00")
 
                 # Cliquer sur le bouton trouvé
-                await bouton.click()
+                await page.click('//button[contains(text(), "15:00")]')
 
                 # Le bouton a été trouvé et cliqué, on arrête la boucle
+                await asyncio.sleep(2)  # Attendre un peu pour que le DOM se stabilise
+
+                # Attendre et cliquer sur le bouton avec data-target="#choix_paiement"
+                boutons = await page.query_selector_all('button[data-target="#choix_paiement"]')
+                for bouton in boutons:
+                    if await bouton.is_visible():
+                        await bouton.click()
+                        print("BOUTON CLIQUÉ")
+                        await page.wait_for_selector('btn.btn-text-primary.btn-block.addresa')
+                        await page.click('btn.btn-text-primary.btn-block.addresa')
+                        break
+
                 match_found = True
-                await page.wait_for_selector('.h-auto.mt-2.btn btn-primary.btn-lg.btn-block.d-flex.flex-column.buttonaddresa')
-                await page.click('.h-auto.mt-2.btn btn-primary.btn-lg.btn-block.d-flex.flex-column.buttonaddresa')
-                await page.click('btn btn-text-primary btn-block addresa')
-                await page.click('btn btn-text-primary btn-block addresa')
+
                 # Attendre quelques secondes pour voir le résultat
                 await asyncio.sleep(5)
-            except:
-                print("Bouton avec le texte '15:00' non trouvé")
+            except Exception as e:
+                print(f"Bouton avec le texte '15:00' non trouvé: {e}")
 
             # Attendre quelques secondes avant de passer à la prochaine itération si aucun bouton n'a été trouvé
             await asyncio.sleep(10)
@@ -76,7 +85,7 @@ async def login_and_scrape(login_url, username, password):
 
 login_url = 'https://rugbypark64.gestion-sports.com/connexion.php?'
 username = 'bernardadrien26@gmail.com'
-password = 'Espasers64_'
+password = ''
 
 async def main():
     await login_and_scrape(login_url, username, password)
