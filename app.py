@@ -112,7 +112,7 @@ if st.session_state.form_submitted:
             login_url_rugby_park = 'https://rugbypark64.gestion-sports.com/connexion.php?'
             login_url_factory = 'https://padelfactory.gestion-sports.com/connexion.php?'
             target_date = date.strftime("%Y-%m-%d")
-            target_time = heure.strftime("%H:%M")
+            target_time = heure.strftime("%H:%M") 
 
             while not success:
                 if lieu == "Rugby Park" or lieu == "Les deux":
