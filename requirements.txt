@@ -61,3 +61,4 @@ wheel
 python3-distutils
 playwright
 distutils
+python3-distutils
