@@ -60,3 +60,4 @@ setuptools>=65.0.0
 wheel
 python3-distutils
 playwright
+distutils
