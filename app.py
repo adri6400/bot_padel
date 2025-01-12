@@ -3,8 +3,13 @@ from datetime import datetime
 from playwright.async_api import async_playwright
 import streamlit as st
 
+import os
+from playwright.__main__ import main as playwright_main
 
-
+# Vérifier si les navigateurs sont installés
+if not os.path.exists("/home/appuser/.cache/ms-playwright"):
+    print("Installing Playwright browsers...")
+    playwright_main(["install"])
 
 
 # Initialiser l'état de session
