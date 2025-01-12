@@ -4,12 +4,12 @@ from playwright.async_api import async_playwright
 import streamlit as st
 
 
-async def install_playwright_browsers():
-    async with async_playwright() as p:
-        await p.install()
+# async def install_playwright_browsers():
+#     async with async_playwright() as p:
+#         await p.install()
 
-# Appeler cette fonction avant d'exécuter votre code
-asyncio.run(install_playwright_browsers())
+# # Appeler cette fonction avant d'exécuter votre code
+# asyncio.run(install_playwright_browsers())
 
 # Initialiser l'état de session
 if "username" not in st.session_state:
