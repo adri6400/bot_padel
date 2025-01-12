@@ -4,12 +4,14 @@ from playwright.async_api import async_playwright
 import streamlit as st
 
 import os
-from playwright.__main__ import main as playwright_main
+from playwright.sync_api import sync_playwright
 
-# Vérifier si les navigateurs sont installés
-if not os.path.exists("/home/appuser/.cache/ms-playwright"):
+# Installer les navigateurs Playwright si nécessaires
+browsers_path = "/home/appuser/.cache/ms-playwright"
+if not os.path.exists(browsers_path):
     print("Installing Playwright browsers...")
-    playwright_main()
+    with sync_playwright() as p:
+        p.install()
 
 # Initialiser l'état de session
 if "username" not in st.session_state:
