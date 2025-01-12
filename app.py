@@ -24,7 +24,7 @@ if "form_submitted" not in st.session_state:
 # Fonction pour la réservation au Rugby Park
 async def login_and_scrape_rugby_park(login_url, username, password, target_date, target_time):
     async with async_playwright() as p:
-        browser = await p.firefox.launch(headless=False)
+        browser = await p.firefox.launch(headless=True)
         page = await browser.new_page()
         await page.goto(login_url)
         await page.fill('input[name="email"]', username)
@@ -61,7 +61,7 @@ async def login_and_scrape_rugby_park(login_url, username, password, target_date
 # Fonction pour la réservation au Padel Factory
 async def login_and_scrape_padel_factory(login_url, username, password, target_date, target_time):
     async with async_playwright() as p:
-        browser = await p.firefox.launch(headless=False)
+        browser = await p.firefox.launch(headless=True)
         page = await browser.new_page()
         await page.goto(login_url)
         await page.fill('input[name="email"]', username)
