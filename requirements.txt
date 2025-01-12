@@ -3,7 +3,6 @@ aiohttp==3.10.5
 aiosignal==1.3.1
 altair==5.4.1
 async-timeout==4.0.3
-asyncio==3.4.3
 attrs==24.2.0
 beautifulsoup4==4.12.3
 blinker==1.8.2
@@ -58,7 +57,4 @@ yarl==1.11.1
 zipp==3.20.2
 setuptools>=65.0.0
 wheel
-python3-distutils
-playwright
-distutils
-python3-distutils
+!playwright install
