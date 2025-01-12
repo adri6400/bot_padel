@@ -11,6 +11,7 @@ browsers_path = "/home/appuser/.cache/ms-playwright"
 if not os.path.exists(browsers_path):
     print("Installing Playwright browsers...")
     subprocess.run(["playwright", "install", "chromium", "firefox", "webkit"], check=True)
+    subprocess.run(["playwright", "install-deps"], check=True)
 
 # Initialiser l'état de session
 if "username" not in st.session_state:
