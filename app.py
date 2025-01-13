@@ -222,7 +222,7 @@ if st.session_state.form_submitted:
     date = st.date_input("Date de réservation")
     date = str(date)  # Convertir la date en chaîne de caractères
     time_slots = [
-        time(hour, minute).strftime("%H:%M")
+        str(time(hour, minute).strftime("%H:%M"))
         for hour in range(9, 23)  # De 9h à 22h inclus
         for minute in (0, 30)    # Créneaux à 00 et 30
     ]
@@ -230,7 +230,7 @@ if st.session_state.form_submitted:
         st.write(f"DATE : {date}")
 
 # Ajouter un selectbox pour choisir parmi les créneaux disponibles
-    heure = st.selectbox("Heure de réservation", str(time_slots))
+    heure = st.selectbox("Heure de réservation", time_slots)
     heure = str(heure)  # Convertir l'heure en chaîne de caractères
 
         # Boutons pour démarrer ou arrêter la réservation
