@@ -113,7 +113,7 @@ async def login_and_scrape_padel_factory(login_url, username, password, target_d
         while True:  # Boucle pour recommencer si une erreur se produit
             try:
                 # Lancer le navigateur
-                browser = await p.firefox.launch(headless=False)
+                browser = await p.firefox.launch(headless=True)
                 page = await browser.new_page()
 
                 # Aller à l'URL de la page de connexion
