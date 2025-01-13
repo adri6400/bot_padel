@@ -43,7 +43,7 @@ async def login_and_scrape_rugby_park(login_url, username, password, target_date
 
         # Chercher le bouton correspondant à l'heure
         try:
-            await page.wait_for_selector(f'//button[contains(text(), "{target_time}")]', timeout=5000)
+            await page.wait_for_selector(f'//button[contains(text(), "{target_time}")]', timeout=50000)
             print(f"Trouvé: {target_time}")
 
             # Cliquer sur le bouton trouvé
@@ -55,9 +55,8 @@ async def login_and_scrape_rugby_park(login_url, username, password, target_date
                 if await bouton.is_visible():
                     await bouton.click()
                     print("BOUTON CLIQUÉ")
-                    #SI TU VEUX VRAIMENT RESERVER ENLEVES CECI
-                    #await page.wait_for_selector('.textConfirmPartie')
-                    #await page.click('.textConfirmPartie')
+                    await page.wait_for_selector('.textConfirmPartie')
+                    await page.click('.textConfirmPartie')
                     break
 
             print("Réservation réussie.")
@@ -127,25 +126,16 @@ async def login_and_scrape_padel_factory(login_url, username, password, target_d
                     if await bouton.is_visible():
                         await bouton.click()
                         print("BOUTON CLIQUÉ")
-                await asyncio.sleep(1000000000)
+                        await page.locator("#btn_paiement_free_resa").click()
+                        await page.get_by_text("Confirmer ma réservation").click()
+                        print("Réservation réussie.")
+                        break
+                
+                        
                
             else : 
-                print("PAS DE Crénaux")
+                print("PAS DE CRENEAUX DISPONIBLES")
 
-        # Cliquer sur le bouton (si nécessaire)
-                
-            # Cliquer sur le bouton pour confirmer la réservation
-            #boutons = await page.query_selector_all('button[data-target="#choix_paiement"]')
-            #for bouton in boutons:
-            #    if await bouton.is_visible():
-            #        await bouton.click()
-            #        print("BOUTON CLIQUÉ")
-                    
-                    #await page.wait_for_selector('.textConfirmPartie')
-                    #await page.click('.textConfirmPartie')
-            #        break
-            await asyncio.sleep(10000)
-            print("Réservation réussie.")
         except Exception as e:
             print(f"Bouton pour l'heure '{target_time}' non trouvé: {e}")
 
@@ -166,8 +156,8 @@ async def main():
         login_url_factory, 
         username, 
         password, 
-        target_date="2025-01-13", 
-        target_time="21:00"
+        target_date="2025-01-15", 
+        target_time="09:00"
     )
 
 asyncio.run(main())
