@@ -222,13 +222,6 @@ if st.session_state.form_submitted:
         for minute in (0, 30)
     ]
 
-    # Ajouter un selectbox pour choisir parmi les créneaux disponibles
-    time_slots = [
-        time(hour, minute)  # Crée un objet time directement
-        for hour in range(9, 23)  # De 9h à 22h inclus
-        for minute in (0, 30)
-    ]
-
 # Ajouter un selectbox pour choisir parmi les créneaux disponibles
     heure = st.selectbox("Heure de réservation", [slot.strftime("%H:%M") for slot in time_slots])
         # Boutons pour démarrer ou arrêter la réservation
@@ -240,8 +233,8 @@ if st.session_state.form_submitted:
     async def main():
         login_url_rugby_park = 'https://rugbypark64.gestion-sports.com/connexion.php?'
         login_url_factory = 'https://padelfactory.gestion-sports.com/connexion.php?'
-        target_date = date.strftime("%Y-%m-%d")
-        target_time = heure.strftime("%H:%M")
+        target_date = date
+        target_time = heure
 
         while not st.session_state.stop_bot:
             success = False
