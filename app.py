@@ -223,7 +223,7 @@ if st.session_state.form_submitted:
     ]
 
     # Ajouter un selectbox pour choisir parmi les créneaux disponibles
-    heure_selectionnee = st.selectbox("Heure de réservation", time_slots)
+    heure = st.selectbox("Heure de réservation", time_slots)
         # Boutons pour démarrer ou arrêter la réservation
     col1, col2 = st.columns(2)
     with col1:
