@@ -109,6 +109,7 @@ async def login_and_scrape_rugby_park(login_url, username, password, target_date
 
 # Fonction pour la réservation au Padel Factory
 async def login_and_scrape_padel_factory(login_url, username, password, target_date, target_time):
+    print("Je commence ")
     async with async_playwright() as p:
         while True:  # Boucle pour recommencer si une erreur se produit
             try:

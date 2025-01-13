@@ -129,10 +129,7 @@ async def login_and_scrape_padel_factory(login_url, username, password, target_d
                         await page.locator("#btn_paiement_free_resa").click()
                         await page.get_by_text("Confirmer ma réservation").click()
                         print("Réservation réussie.")
-                        break
-                
-                        
-               
+                        break              
             else : 
                 print("PAS DE CRENEAUX DISPONIBLES")
 
