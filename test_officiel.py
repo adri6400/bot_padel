@@ -156,7 +156,7 @@ login_url_rugby_park = 'https://rugbypark64.gestion-sports.com/connexion.php?'
 login_url_factory = 'https://padelfactory.gestion-sports.com/connexion.php?'
 #FAIRE POUR LES BRUYERES ET ON EST BON 
 username = 'bernardadrien26@gmail.com'
-password = 'Espasers64_'
+password = ''
 
 async def main():
     # Appeler la fonction avec une date et une heure spécifiques
