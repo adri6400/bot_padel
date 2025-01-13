@@ -11,6 +11,16 @@ st.set_page_config(
     layout="wide",  # Optionnel : pour un layout large
     initial_sidebar_state="expanded"  # Optionnel : pour un menu latéral déplié
 )
+icon_path = "apple-touch-icon.jpeg"  # Chemin vers votre icône iOS
+if os.path.exists(icon_path):
+    st.markdown(
+        f"""
+        <link rel="apple-touch-icon" sizes="180x180" href="{icon_path}">
+        <link rel="icon" type="image/png" sizes="32x32" href="{icon_path}">
+        <link rel="icon" type="image/png" sizes="16x16" href="{icon_path}">
+        """,
+        unsafe_allow_html=True
+    )
 # Vérifier si les navigateurs Playwright sont installés
 browsers_path = "/home/appuser/.cache/ms-playwright"
 if not os.path.exists(browsers_path):
