@@ -7,7 +7,7 @@ import os
 import subprocess
 st.set_page_config(
     page_title="Réservation Padel",  # Titre de l'onglet
-    page_icon="favicon.jpeg",  # Emoji ou chemin vers une image
+    page_icon="./favicon.jpeg",  # Emoji ou chemin vers une image
     layout="wide",  # Optionnel : pour un layout large
     initial_sidebar_state="expanded"  # Optionnel : pour un menu latéral déplié
 )
