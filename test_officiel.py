@@ -122,6 +122,12 @@ async def login_and_scrape_padel_factory(login_url, username, password, target_d
                 print(f'Valeur de data-target : {data_target_value}')
                 await button.click()
                 await page.get_by_role("list").get_by_text("90 min").click()
+                boutons = await page.query_selector_all('button[data-target="#choix_paiement"]')
+                for bouton in boutons:
+                    if await bouton.is_visible():
+                        await bouton.click()
+                        print("BOUTON CLIQUÉ")
+                await asyncio.sleep(1000000000)
                
             else : 
                 print("PAS DE Crénaux")
@@ -150,11 +156,13 @@ login_url_rugby_park = 'https://rugbypark64.gestion-sports.com/connexion.php?'
 login_url_factory = 'https://padelfactory.gestion-sports.com/connexion.php?'
 #FAIRE POUR LES BRUYERES ET ON EST BON 
 username = 'bernardadrien26@gmail.com'
-password = ''
+password = 'Espasers64_'
 
 async def main():
     # Appeler la fonction avec une date et une heure spécifiques
-    await login_and_scrape_padel_factory(
+
+    
+    await login_and_scrape_padel_factory(   
         login_url_factory, 
         username, 
         password, 

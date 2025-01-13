@@ -5,7 +5,12 @@ import streamlit as st
 
 import os
 import subprocess
-
+st.set_page_config(
+    page_title="Réservation Padel",  # Titre de l'onglet
+    page_icon="logo.jpeg",  # Emoji ou chemin vers une image
+    layout="wide",  # Optionnel : pour un layout large
+    initial_sidebar_state="expanded"  # Optionnel : pour un menu latéral déplié
+)
 # Vérifier si les navigateurs Playwright sont installés
 browsers_path = "/home/appuser/.cache/ms-playwright"
 if not os.path.exists(browsers_path):
