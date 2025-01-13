@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, time
 from playwright.async_api import async_playwright
 import streamlit as st
 
@@ -217,14 +217,14 @@ if st.session_state.form_submitted:
     )
     date = st.date_input("Date de réservation")
     time_slots = [
-        (datetime.time(hour, minute)).strftime("%H:%M")
-        for hour in range(9, 22 + 1)
+        time(hour, minute).strftime("%H:%M")
+        for hour in range(9, 23)  # 22 inclus
         for minute in (0, 30)
-        ]
+    ]
 
     # Ajouter un selectbox pour choisir parmi les créneaux disponibles
     heure_selectionnee = st.selectbox("Heure de réservation", time_slots)
-    # Boutons pour démarrer ou arrêter la réservation
+        # Boutons pour démarrer ou arrêter la réservation
     col1, col2 = st.columns(2)
     with col1:
         start_button = st.button("Démarrer la réservation")
