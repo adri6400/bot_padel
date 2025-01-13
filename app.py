@@ -7,11 +7,11 @@ import os
 import subprocess
 st.set_page_config(
     page_title="Réservation Padel",  # Titre de l'onglet
-    page_icon="./favicon.jpeg",  # Emoji ou chemin vers une image
+    page_icon="./favicon.png",  # Emoji ou chemin vers une image
     layout="wide",  # Optionnel : pour un layout large
     initial_sidebar_state="expanded"  # Optionnel : pour un menu latéral déplié
 )
-icon_path = "apple-touch-icon.jpeg"  # Chemin vers votre icône iOS
+icon_path = "./apple-touch-icon.png"  # Chemin vers votre icône iOS
 if os.path.exists(icon_path):
     st.markdown(
         f"""
