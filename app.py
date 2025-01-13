@@ -226,6 +226,8 @@ if st.session_state.form_submitted:
         for hour in range(9, 23)  # De 9h à 22h inclus
         for minute in (0, 30)    # Créneaux à 00 et 30
     ]
+    if date:
+        st.write(f"DATE : {date}")
 
 # Ajouter un selectbox pour choisir parmi les créneaux disponibles
     heure = st.selectbox("Heure de réservation", time_slots)
