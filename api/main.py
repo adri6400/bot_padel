@@ -26,11 +26,13 @@ async def reserve_rugby_park(request: ReservationRequest):
 
 @app.post("/reserve/padel-factory")
 async def reserve_padel_factory(request: ReservationRequest):
-    result = await login_and_scrape_padel_factory(
-        request.login_url,
-        request.username,
-        request.password,
-        request.target_date,
-        request.target_time,
-    )
-    return result
+    # result = await login_and_scrape_padel_factory(
+    #     request.login_url,
+    #     request.username,
+    #     request.password,
+    #     request.target_date,
+    #     request.target_time,
+    # )
+    
+    #return result
+    return {"success": True, "message": f"Réservation à {request.date} à {request.time}"}
