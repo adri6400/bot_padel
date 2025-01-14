@@ -141,9 +141,9 @@ async def login_and_scrape_padel_factory(login_url, username, password, target_d
                 target_day = target_date_obj.day
 
                 # Naviguer directement vers la date cible
-                await page.wait_for_selector('.datepicker.form-control.hasDatepicker')
+                await page.wait_for_selector('.datepicker.form-control.hasDatepicker', timeout=100000) 
                 await page.click('.datepicker.form-control.hasDatepicker')
-                await page.wait_for_selector(f'.ui-state-default[data-date="{target_day}"]')
+                await page.wait_for_selector(f'.ui-state-default[data-date="{target_day}"]', timeout=100000)
                 await page.click(f'.ui-state-default[data-date="{target_day}"]')
                 st.write("Avant l'heure")
                 # Sélectionner l'heure cible
