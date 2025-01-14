@@ -72,7 +72,7 @@ async def login_and_scrape_rugby_park(login_url, username, password, target_date
                 await page.click(f'.ui-state-default[data-date="{target_day}"]')
 
                 # Sélectionner l'heure cible
-                await page.wait_for_selector('#heure')
+                await page.wait_for_selector('#heure', timeout=1000000)
                 await page.select_option('#heure', target_time)
                 await asyncio.sleep(2)
 
@@ -148,7 +148,7 @@ async def login_and_scrape_padel_factory(login_url, username, password, target_d
 
                 # Sélectionner l'heure cible
                 await page.wait_for_selector('#heure', timeout=100000)
-                await page.select_option('#heure', target_time)
+                await page.select_option('#heure', target_time, timeout=100000)
 
                 # Chercher le bouton correspondant à l'heure
                 await page.wait_for_selector(f'//button[contains(text(), "{target_time}")]', timeout=100000)
