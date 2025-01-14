@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from scraping_api import login_and_scrape_rugby_park, login_and_scrape_padel_factory
+from api.scraping_api import login_and_scrape_rugby_park, login_and_scrape_padel_factory
 
 app = FastAPI()
 
