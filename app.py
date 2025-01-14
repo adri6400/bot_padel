@@ -114,10 +114,10 @@ async def login_and_scrape_padel_factory(login_url, username, password, target_d
         while True:  # Boucle pour recommencer si une erreur se produit
             try:
                 # Lancer le navigateur
-                print("Je commence ")
+                st.write("Je commence ")
                 browser = await p.firefox.launch(headless=True)
                 page = await browser.new_page()
-                print("Navigateur lancé")
+                st.write("Navigateur lancé")
 
                 # Aller à l'URL de la page de connexion
                 await page.goto(login_url)
@@ -128,7 +128,7 @@ async def login_and_scrape_padel_factory(login_url, username, password, target_d
                 await page.fill('input[name="pass"]', password)
                 await page.wait_for_selector('button[type="submit"]')
                 await page.click('button[type="submit"]')
-                print("Je suis connecté")
+                st.write("Je suis connecté")
 
                 # Attendre que la page se charge après la soumission
                 await asyncio.sleep(5)
@@ -147,20 +147,17 @@ async def login_and_scrape_padel_factory(login_url, username, password, target_d
                 await page.click(f'.ui-state-default[data-date="{target_day}"]')
 
                 # Sélectionner l'heure cible
-                await page.wait_for_selector('#heure')
+                await page.wait_for_selector('#heure', timeout=100000)
                 await page.select_option('#heure', target_time)
 
                 # Chercher le bouton correspondant à l'heure
-                await page.wait_for_selector(f'//button[contains(text(), "{target_time}")]', timeout=5000)
+                await page.wait_for_selector(f'//button[contains(text(), "{target_time}")]', timeout=100000)
                 print(f"Trouvé: {target_time}")
 
                 # Trouver le bouton
                 button = await page.query_selector(f'//button[contains(text(), "{target_time}")]')
 
                 if button:
-                    # Extraire la valeur de l'attribut data-target
-                    data_target_value = await button.get_attribute('data-target')
-                    print(f'Valeur de data-target : {data_target_value}')
                     await button.click()
 
                     # Cliquer sur la durée (90 min par exemple)
@@ -171,11 +168,11 @@ async def login_and_scrape_padel_factory(login_url, username, password, target_d
                     for bouton in boutons:
                         if await bouton.is_visible():
                             await bouton.click()
-                            print("BOUTON CLIQUÉ")
+                            st.write("BOUTON CLIQUÉ")
                             await asyncio.sleep(1)
                             await page.locator("#btn_paiement_free_resa").click()
                             await page.get_by_text("Confirmer ma réservation").click()
-                            print("Réservation réussie.")
+                            st.write("Réservation réussie.")
                             # Fermer le navigateur en cas de succès
                             await browser.close()
                             return True
@@ -183,18 +180,18 @@ async def login_and_scrape_padel_factory(login_url, username, password, target_d
                     return False
 
                 else:
-                    print("PAS DE CRENEAUX DISPONIBLES")
+                    st.write("PAS DE CRENEAUX DISPONIBLES")
                     await browser.close()
                     return False
 
 
 
             except Exception as e:
-                print(f"Erreur rencontrée : {e}")
+                st.write(f"Erreur rencontrée : {e}")
                 # Fermer le navigateur en cas d'erreur
                 if 'browser' in locals():
                     await browser.close()
-                print("Reprise de la tentative...")
+                st.write("Reprise de la tentative...")
                 await asyncio.sleep(5)  # Attendre avant de recommencer
 
 # Streamlit UI
