@@ -7,11 +7,11 @@ from api.scraping_api import login_and_scrape_rugby_park, login_and_scrape_padel
 app = FastAPI()
 
 class ReservationRequest(BaseModel):
-    login_url: str
     username: str
     password: str
-    target_date: str
-    target_time: str
+    date: str  # Remplacez "target_date" par "date"
+    time: str  # Remplacez "target_time" par "time"
+
 
 @app.post("/reserve/rugby-park")
 async def reserve_rugby_park(request: ReservationRequest):
@@ -26,13 +26,14 @@ async def reserve_rugby_park(request: ReservationRequest):
 
 @app.post("/reserve/padel-factory")
 async def reserve_padel_factory(request: ReservationRequest):
-    # result = await login_and_scrape_padel_factory(
-    #     request.login_url,
-    #     request.username,
-    #     request.password,
-    #     request.target_date,
-    #     request.target_time,
-    # )
-    
-    #return result
-    return {"success": True, "message": f"Réservation à {request.date} à {request.time}"}
+    login_url = "https://padelfactory.gestion-sports.com/connexion.php"
+    # Remplacez "request.target_date" par "request.date" si nécessaire
+    result = await login_and_scrape_padel_factory(
+        login_url=login_url,
+        username=request.username,
+        password=request.password,
+        target_date=request.date,
+        target_time=request.time
+    )
+    return result
+
