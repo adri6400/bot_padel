@@ -145,10 +145,12 @@ async def login_and_scrape_padel_factory(login_url, username, password, target_d
                 await page.click('.datepicker.form-control.hasDatepicker')
                 await page.wait_for_selector(f'.ui-state-default[data-date="{target_day}"]')
                 await page.click(f'.ui-state-default[data-date="{target_day}"]')
-
+                st.write("Avant l'heure")
                 # Sélectionner l'heure cible
                 await page.wait_for_selector('#heure', timeout=100000)
                 await page.select_option('#heure', target_time, timeout=100000)
+                
+                st.write("Après l'heure")
 
                 # Chercher le bouton correspondant à l'heure
                 await page.wait_for_selector(f'//button[contains(text(), "{target_time}")]', timeout=100000)
