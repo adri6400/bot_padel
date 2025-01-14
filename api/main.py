@@ -1,7 +1,15 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from api.scraping_api import login_and_scrape_rugby_park, login_and_scrape_padel_factory
+import subprocess
+import os
 
+# Vérifier si les navigateurs Playwright sont installés
+browsers_path = "/home/appuser/.cache/ms-playwright"
+if not os.path.exists(browsers_path):
+    print("Installing Playwright browsers...")
+    subprocess.run(["playwright", "install", "chromium", "firefox", "webkit"], check=True)
+    subprocess.run(["playwright", "install-deps"], check=True)
 app = FastAPI()
 
 class ReservationRequest(BaseModel):
