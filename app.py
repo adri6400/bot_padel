@@ -12,12 +12,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"  # Optionnel : pour un menu latéral déplié
 )
 
-# Vérifier si les navigateurs Playwright sont installés
-browsers_path = "/home/appuser/.cache/ms-playwright"
-if not os.path.exists(browsers_path):
-    print("Installing Playwright browsers...")
-    subprocess.run(["playwright", "install", "chromium", "firefox", "webkit"], check=True)
-    subprocess.run(["playwright", "install-deps"], check=True)
+# # Vérifier si les navigateurs Playwright sont installés
+# browsers_path = "/home/appuser/.cache/ms-playwright"
+# if not os.path.exists(browsers_path):
+#     print("Installing Playwright browsers...")
+#     subprocess.run(["playwright", "install", "chromium", "firefox", "webkit"], check=True)
+#     subprocess.run(["playwright", "install-deps"], check=True)
 
 # Initialiser l'état de session
 if "username" not in st.session_state:
@@ -34,167 +34,167 @@ def stop_bot():
     st.session_state.stop_bot = True
 
 # Fonction pour la réservation au Rugby Park
-async def login_and_scrape_rugby_park(login_url, username, password, target_date, target_time):
-    async with async_playwright() as p:
-        while True:  # Boucle pour recommencer si une erreur se produit
-            try:
-                # Lancer le navigateur
-                browser = await p.firefox.launch(headless=True)
-                page = await browser.new_page()
+# async def login_and_scrape_rugby_park(login_url, username, password, target_date, target_time):
+#     async with async_playwright() as p:
+#         while True:  # Boucle pour recommencer si une erreur se produit
+#             try:
+#                 # Lancer le navigateur
+#                 browser = await p.firefox.launch(headless=True)
+#                 page = await browser.new_page()
 
-                # Aller à l'URL de la page de connexion
-                await page.goto(login_url)
+#                 # Aller à l'URL de la page de connexion
+#                 await page.goto(login_url)
 
-                # Entrer l'adresse e-mail et mot de passe
-                await page.fill('input[name="email"]', username)
-                await page.click('.contact100-form-btn')
-                await page.fill('input[name="pass"]', password)
-                await page.wait_for_selector('button[type="submit"]')
-                await page.click('button[type="submit"]')
+#                 # Entrer l'adresse e-mail et mot de passe
+#                 await page.fill('input[name="email"]', username)
+#                 await page.click('.contact100-form-btn')
+#                 await page.fill('input[name="pass"]', password)
+#                 await page.wait_for_selector('button[type="submit"]')
+#                 await page.click('button[type="submit"]')
 
-                # Attendre que la page se charge après la soumission
-                await asyncio.sleep(5)
+#                 # Attendre que la page se charge après la soumission
+#                 await asyncio.sleep(5)
 
-                # Naviguer vers la page de réservation
-                await page.goto('https://rugbypark64.gestion-sports.com/membre/reservation.html')
-                await page.wait_for_selector('#sport')
-                await page.select_option('#sport', '360')
+#                 # Naviguer vers la page de réservation
+#                 await page.goto('https://rugbypark64.gestion-sports.com/membre/reservation.html')
+#                 await page.wait_for_selector('#sport')
+#                 await page.select_option('#sport', '360')
 
-                # Convertir la date cible en objet datetime
-                target_date_obj = datetime.strptime(target_date, "%Y-%m-%d")
-                target_day = target_date_obj.day
+#                 # Convertir la date cible en objet datetime
+#                 target_date_obj = datetime.strptime(target_date, "%Y-%m-%d")
+#                 target_day = target_date_obj.day
 
-                # Naviguer directement vers la date cible
-                await page.wait_for_selector('.datepicker.form-control.hasDatepicker')
-                await page.click('.datepicker.form-control.hasDatepicker')
-                await asyncio.sleep(2)
-                await page.wait_for_selector(f'.ui-state-default[data-date="{target_day}"]')
-                await page.click(f'.ui-state-default[data-date="{target_day}"]')
+#                 # Naviguer directement vers la date cible
+#                 await page.wait_for_selector('.datepicker.form-control.hasDatepicker')
+#                 await page.click('.datepicker.form-control.hasDatepicker')
+#                 await asyncio.sleep(2)
+#                 await page.wait_for_selector(f'.ui-state-default[data-date="{target_day}"]')
+#                 await page.click(f'.ui-state-default[data-date="{target_day}"]')
 
-                # Sélectionner l'heure cible
-                await page.wait_for_selector('#heure', timeout=1000000)
-                await page.select_option('#heure', target_time)
-                await asyncio.sleep(2)
+#                 # Sélectionner l'heure cible
+#                 await page.wait_for_selector('#heure', timeout=1000000)
+#                 await page.select_option('#heure', target_time)
+#                 await asyncio.sleep(2)
 
-                # Chercher le bouton correspondant à l'heure
-                await page.wait_for_selector(f'//button[contains(text(), "{target_time}")]', timeout=5000)
-                print(f"Trouvé: {target_time}")
+#                 # Chercher le bouton correspondant à l'heure
+#                 await page.wait_for_selector(f'//button[contains(text(), "{target_time}")]', timeout=5000)
+#                 print(f"Trouvé: {target_time}")
 
-                # Cliquer sur le bouton trouvé
-                await asyncio.sleep(1)
-                await page.click(f'//button[contains(text(), "{target_time}")]')
+#                 # Cliquer sur le bouton trouvé
+#                 await asyncio.sleep(1)
+#                 await page.click(f'//button[contains(text(), "{target_time}")]')
 
-                # Cliquer sur le bouton pour confirmer la réservation
-                boutons = await page.query_selector_all('button[data-target="#choix_paiement"]')
-                for bouton in boutons:
-                    if await bouton.is_visible():
-                        await asyncio.sleep(2)
-                        await bouton.click()
-                        print("BOUTON CLIQUÉ")
-                        await page.wait_for_selector('.textConfirmPartie')
-                        await asyncio.sleep(1)
-                        await page.click('.textConfirmPartie')
-                        print("Réservation réussie au Rugby Park.")
-                        await browser.close()
-                        return True
-                await browser.close()
-                return False
-            except Exception as e:
-                print(f"Erreur rencontrée : {e}")
-                # Fermer le navigateur en cas d'erreur
-                if 'browser' in locals():
-                    await browser.close()
-                print("Reprise de la tentative...")
-                await asyncio.sleep(5)  # Attendre avant de recommencer
+#                 # Cliquer sur le bouton pour confirmer la réservation
+#                 boutons = await page.query_selector_all('button[data-target="#choix_paiement"]')
+#                 for bouton in boutons:
+#                     if await bouton.is_visible():
+#                         await asyncio.sleep(2)
+#                         await bouton.click()
+#                         print("BOUTON CLIQUÉ")
+#                         await page.wait_for_selector('.textConfirmPartie')
+#                         await asyncio.sleep(1)
+#                         await page.click('.textConfirmPartie')
+#                         print("Réservation réussie au Rugby Park.")
+#                         await browser.close()
+#                         return True
+#                 await browser.close()
+#                 return False
+#             except Exception as e:
+#                 print(f"Erreur rencontrée : {e}")
+#                 # Fermer le navigateur en cas d'erreur
+#                 if 'browser' in locals():
+#                     await browser.close()
+#                 print("Reprise de la tentative...")
+#                 await asyncio.sleep(5)  # Attendre avant de recommencer
 
-# Fonction pour la réservation au Padel Factory
-async def login_and_scrape_padel_factory(login_url, username, password, target_date, target_time):
-    print("Je commence ")
-    async with async_playwright() as p:
-        while True:  # Boucle pour recommencer si une erreur se produit
-            try:
-                # Lancer le navigateur
-                st.write("Je commence ")
-                browser = await p.firefox.launch(headless=True)
-                page = await browser.new_page()
-                st.write("Navigateur lancé")
+# # Fonction pour la réservation au Padel Factory
+# async def login_and_scrape_padel_factory(login_url, username, password, target_date, target_time):
+#     print("Je commence ")
+#     async with async_playwright() as p:
+#         while True:  # Boucle pour recommencer si une erreur se produit
+#             try:
+#                 # Lancer le navigateur
+#                 st.write("Je commence ")
+#                 browser = await p.firefox.launch(headless=True)
+#                 page = await browser.new_page()
+#                 st.write("Navigateur lancé")
 
-                # Aller à l'URL de la page de connexion
-                await page.goto(login_url)
+#                 # Aller à l'URL de la page de connexion
+#                 await page.goto(login_url)
 
-                # Entrer l'adresse e-mail et mot de passe
-                await page.fill('input[name="email"]', username)
-                await page.click('.contact100-form-btn')
-                await page.fill('input[name="pass"]', password)
-                await page.wait_for_selector('button[type="submit"]')
-                await page.click('button[type="submit"]')
-                st.write("Je suis connecté")
+#                 # Entrer l'adresse e-mail et mot de passe
+#                 await page.fill('input[name="email"]', username)
+#                 await page.click('.contact100-form-btn')
+#                 await page.fill('input[name="pass"]', password)
+#                 await page.wait_for_selector('button[type="submit"]')
+#                 await page.click('button[type="submit"]')
+#                 st.write("Je suis connecté")
 
-                # Attendre que la page se charge après la soumission
-                await asyncio.sleep(5)
+#                 # Attendre que la page se charge après la soumission
+#                 await asyncio.sleep(5)
 
-                # Naviguer vers la page de réservation
-                await page.goto('https://padelfactory.gestion-sports.com/membre/reservation.html')
+#                 # Naviguer vers la page de réservation
+#                 await page.goto('https://padelfactory.gestion-sports.com/membre/reservation.html')
 
-                # Convertir la date cible en objet datetime
-                target_date_obj = datetime.strptime(target_date, "%Y-%m-%d")
-                target_day = target_date_obj.day
+#                 # Convertir la date cible en objet datetime
+#                 target_date_obj = datetime.strptime(target_date, "%Y-%m-%d")
+#                 target_day = target_date_obj.day
 
-                # Naviguer directement vers la date cible
-                await page.wait_for_selector('.datepicker.form-control.hasDatepicker', timeout=100000) 
-                await page.click('.datepicker.form-control.hasDatepicker')
-                await page.wait_for_selector(f'.ui-state-default[data-date="{target_day}"]', timeout=100000)
-                await page.click(f'.ui-state-default[data-date="{target_day}"]')
-                st.write("Avant l'heure")
-                # Sélectionner l'heure cible
-                await page.wait_for_selector('#heure', timeout=100000)
-                await page.select_option('#heure', target_time, timeout=100000)
+#                 # Naviguer directement vers la date cible
+#                 await page.wait_for_selector('.datepicker.form-control.hasDatepicker', timeout=100000) 
+#                 await page.click('.datepicker.form-control.hasDatepicker')
+#                 await page.wait_for_selector(f'.ui-state-default[data-date="{target_day}"]', timeout=100000)
+#                 await page.click(f'.ui-state-default[data-date="{target_day}"]')
+#                 st.write("Avant l'heure")
+#                 # Sélectionner l'heure cible
+#                 await page.wait_for_selector('#heure', timeout=100000)
+#                 await page.select_option('#heure', target_time, timeout=100000)
                 
-                st.write("Après l'heure")
+#                 st.write("Après l'heure")
 
-                # Chercher le bouton correspondant à l'heure
-                await page.wait_for_selector(f'//button[contains(text(), "{target_time}")]', timeout=100000)
-                print(f"Trouvé: {target_time}")
+#                 # Chercher le bouton correspondant à l'heure
+#                 await page.wait_for_selector(f'//button[contains(text(), "{target_time}")]', timeout=100000)
+#                 print(f"Trouvé: {target_time}")
 
-                # Trouver le bouton
-                button = await page.query_selector(f'//button[contains(text(), "{target_time}")]')
+#                 # Trouver le bouton
+#                 button = await page.query_selector(f'//button[contains(text(), "{target_time}")]')
 
-                if button:
-                    await button.click()
+#                 if button:
+#                     await button.click()
 
-                    # Cliquer sur la durée (90 min par exemple)
-                    await page.get_by_role("list").get_by_text("90 min").click()
+#                     # Cliquer sur la durée (90 min par exemple)
+#                     await page.get_by_role("list").get_by_text("90 min").click()
 
-                    # Cliquer sur le bouton pour confirmer la réservation
-                    boutons = await page.query_selector_all('button[data-target="#choix_paiement"]')
-                    for bouton in boutons:
-                        if await bouton.is_visible():
-                            await bouton.click()
-                            st.write("BOUTON CLIQUÉ")
-                            await asyncio.sleep(1)
-                            await page.locator("#btn_paiement_free_resa").click()
-                            await page.get_by_text("Confirmer ma réservation").click()
-                            st.write("Réservation réussie.")
-                            # Fermer le navigateur en cas de succès
-                            await browser.close()
-                            return True
-                    await browser.close()
-                    return False
+#                     # Cliquer sur le bouton pour confirmer la réservation
+#                     boutons = await page.query_selector_all('button[data-target="#choix_paiement"]')
+#                     for bouton in boutons:
+#                         if await bouton.is_visible():
+#                             await bouton.click()
+#                             st.write("BOUTON CLIQUÉ")
+#                             await asyncio.sleep(1)
+#                             await page.locator("#btn_paiement_free_resa").click()
+#                             await page.get_by_text("Confirmer ma réservation").click()
+#                             st.write("Réservation réussie.")
+#                             # Fermer le navigateur en cas de succès
+#                             await browser.close()
+#                             return True
+#                     await browser.close()
+#                     return False
 
-                else:
-                    st.write("PAS DE CRENEAUX DISPONIBLES")
-                    await browser.close()
-                    return False
+#                 else:
+#                     st.write("PAS DE CRENEAUX DISPONIBLES")
+#                     await browser.close()
+#                     return False
 
 
 
-            except Exception as e:
-                st.write(f"Erreur rencontrée : {e}")
-                # Fermer le navigateur en cas d'erreur
-                if 'browser' in locals():
-                    await browser.close()
-                st.write("Reprise de la tentative...")
-                await asyncio.sleep(5)  # Attendre avant de recommencer
+#             except Exception as e:
+#                 st.write(f"Erreur rencontrée : {e}")
+#                 # Fermer le navigateur en cas d'erreur
+#                 if 'browser' in locals():
+#                     await browser.close()
+#                 st.write("Reprise de la tentative...")
+#                 await asyncio.sleep(5)  # Attendre avant de recommencer
 
 # Streamlit UI
 st.title("Réservation Automatique")
