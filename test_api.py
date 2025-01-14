@@ -3,11 +3,10 @@ import requests
 url = "https://bot-padel.onrender.com/reserve/padel-factory"
 
 payload = {
-    "login_url": "https://padelfactory.gestion-sports.com/connexion.php",
     "username": "bernardadrien26@gmail.com",
     "password": "Espasers64_",
-    "target_date": "2025-01-16",
-    "target_time": "09:00"
+    "date": "2025-01-16",
+    "time": "09:00"
 }
 
 response = requests.post(url, json=payload)
