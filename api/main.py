@@ -8,7 +8,7 @@ import os
 browsers_path = "/home/appuser/.cache/ms-playwright"
 if not os.path.exists(browsers_path):
     print("Installing Playwright browsers...")
-    subprocess.run(["npx", "playwright", "install"], check=True)
+    subprocess.run(["playwright", "install"], check=True)
 app = FastAPI()
 
 class ReservationRequest(BaseModel):
