@@ -16,10 +16,24 @@ if "password" not in st.session_state:
     st.session_state.password = ""
 if "form_submitted" not in st.session_state:
     st.session_state.form_submitted = False
+if "api_calls" not in st.session_state:
+    st.session_state.api_calls = []  # Liste pour suivre les appels API
 
 # API Endpoints
 PADEL_GROUND_API_URL = "https://botpadel-production.up.railway.app/reserve/padel-ground"
 PADEL_FACTORY_API_URL = "https://botpadel-production.up.railway.app/reserve/padel-factory"
+STOP_API_URL = "https://botpadel-production.up.railway.app/stop"
+
+# Fonction pour arrêter l'API
+def stop_api():
+    try:
+        response = requests.post(STOP_API_URL)
+        if response.status_code == 200:
+            st.success("API arrêtée avec succès.")
+        else:
+            st.error(f"Erreur lors de l'arrêt de l'API : {response.text}")
+    except Exception as e:
+        st.error(f"Erreur lors de la communication avec l'API : {e}")
 
 # Titre principal
 st.title("Réservation Automatique de Padel")
@@ -53,28 +67,52 @@ if st.session_state.form_submitted:
     ]
     heure = st.selectbox("Heure de réservation", time_slots)
 
-    # Bouton pour soumettre la demande de réservation
-    if st.button("Lancer la réservation"):
-        for lieu in lieux:
-            # Préparer les données
-            payload = {
-                "username": st.session_state.username,
-                "password": st.session_state.password,
-                "target_date": str(date),
-                "target_time": heure,
-            }
+    # Boutons pour soumettre la demande de réservation et arrêter l'API
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Lancer la réservation"):
+            for lieu in lieux:
+                # Préparer les données
+                payload = {
+                    "username": st.session_state.username,
+                    "password": st.session_state.password,
+                    "target_date": str(date),
+                    "target_time": heure,
+                }
 
-            # Appeler l'API correspondante
-            if lieu == "Padel Ground":
-                response = requests.post(PADEL_GROUND_API_URL, json=payload)
-                if response.status_code == 200:
-                    st.success(f"Réservation en cours pour {lieu}.")
-                else:
-                    st.warning(f"Erreur pour {lieu} : {response.json().get('message')}")
+                # Appeler l'API correspondante
+                try:
+                    if lieu == "Padel Ground":
+                        response = requests.post(PADEL_GROUND_API_URL, json=payload)
+                        status = "Succès" if response.status_code == 200 else f"Erreur : {response.json().get('message')}"
+                        st.session_state.api_calls.append({
+                            "Lieu": lieu,
+                            "Date": str(date),
+                            "Heure": heure,
+                            "Statut": status
+                        })
+                    elif lieu == "Padel Factory":
+                        response = requests.post(PADEL_FACTORY_API_URL, json=payload)
+                        status = "Succès" if response.status_code == 200 else f"Erreur : {response.json().get('message')}"
+                        st.session_state.api_calls.append({
+                            "Lieu": lieu,
+                            "Date": str(date),
+                            "Heure": heure,
+                            "Statut": status
+                        })
+                except Exception as e:
+                    st.session_state.api_calls.append({
+                        "Lieu": lieu,
+                        "Date": str(date),
+                        "Heure": heure,
+                        "Statut": f"Erreur : {e}"
+                    })
 
-            elif lieu == "Padel Factory":
-                response = requests.post(PADEL_FACTORY_API_URL, json=payload)
-                if response.status_code == 200:
-                    st.success(f"Réservation en cours pour {lieu}.")
-                else:
-                    st.warning(f"Erreur pour {lieu} : {response.json().get('message')}")
+    with col2:
+        if st.button("Arrêter l'API"):
+            stop_api()
+
+    # Afficher les détails des appels API
+    if st.session_state.api_calls:
+        st.write("### Historique des appels API")
+        st.table(st.session_state.api_calls)  # Afficher le tableau des appels
