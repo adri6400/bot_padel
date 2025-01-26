@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from fastapi.responses import JSONResponse
 from api.scraping_api import main_padel_factory, main_padel_ground
 from datetime import datetime
 import json
@@ -24,9 +25,9 @@ def reserve_padel_ground(request: ReservationRequest):
     )
     print("result", result)
     if result:
-        return json.dumps({"message": "Réservation réussie."}), 200
+        return JSONResponse(content={"message": "Réservation réussie."}, status_code=200)
     else:
-        return json.dumps({"message": "Échec de la réservation au Padel Ground."}), 400
+        return JSONResponse(content={"message": "Échec de la réservation au Padel Ground."}, status_code=400)
 
 @app.post("/reserve/padel-factory")
 async def reserve_padel_factory(request: ReservationRequest):
@@ -49,6 +50,6 @@ async def reserve_padel_factory(request: ReservationRequest):
         request.target_time,
     )
     if result:
-        return json.dumps({"message": "Réservation réussie."}), 200
+        return JSONResponse(content={"message": "Réservation réussie."}, status_code=200)
     else:
-        return json.dumps({"message": "Échec de la réservation au Padel Ground."}), 400
+        return JSONResponse(content={"message": "Échec de la réservation au Padel Ground."}, status_code=400)
