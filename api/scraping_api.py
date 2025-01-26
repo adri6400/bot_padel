@@ -118,7 +118,7 @@ def reserver_padel(token_csrf, session_cookies, pm_id_param, date, hour, terrain
         session = requests.Session()
         session.cookies.update(session_cookies)
         response = session.post(reservation_url, headers=headers, data=encoded_data)
-
+        print(response.json())
         if response.status_code == 200:
             response_json = response.json()
             print(f"Réservation réussie pour le terrain {terrain_id} :", response_json)
