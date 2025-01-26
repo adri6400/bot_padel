@@ -154,7 +154,7 @@ def main_padel_factory(login_url, target_url, username, password, terrains, date
     """
     driver = None  # Initialiser la variable driver pour garantir sa fermeture en cas d'erreur
     try:
-        # Étape 1 : Connexion et récupération des cookies
+        # Étape 1  : Connexion et récupération des cookies
         driver, cookies = login_and_get_csrf_token_and_cookies(login_url, username, password)
         # Étape 2 : Récupérer l'ID de méthode de paiement
         pm_id_param = get_payment_method_id(driver, target_url)
