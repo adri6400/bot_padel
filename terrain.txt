@@ -1,0 +1,19 @@
+PADEL FACTORY : 
+- 2519
+- 2520
+- 2521
+- 2522
+- 755
+- 756
+- 757
+- 758
+
+Pour le padel factory et gestion sport en general je voudrais je veux l'id du paiment qui ressemble un peu à ceci : 
+"pm_1Q6ucVQSja6aAHjH0uXgxDY3"
+
+
+
+
+PADEL GROUND : 
+activities_id = ce8c306e-224a-4f24-aa9d-6500580924dc
+club_id = 9a3f194d-15c8-4fe5-b83c-51ebf3a388ce
