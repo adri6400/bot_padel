@@ -21,8 +21,8 @@ if "stop_bot" not in st.session_state:
     st.session_state.stop_bot = False
 
 # API Endpoints
-PADEL_GROUND_API_URL = "https://bot-padel.onrender.com/reserve/padel-ground"
-PADEL_FACTORY_API_URL = "https://bot-padel.onrender.com/reserve/padel-factory"
+PADEL_GROUND_API_URL = "http://0.0.0.0:8000/reserve/padel-ground"
+PADEL_FACTORY_API_URL = "http://0.0.0.0:8000/reserve/padel-factory"
 
 # Fonction pour arrêter le bot
 def stop_bot():

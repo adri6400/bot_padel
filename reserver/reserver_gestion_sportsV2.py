@@ -9,6 +9,7 @@ import requests
 import time
 import urllib.parse
 
+
 def login_and_get_csrf_token_and_cookies(login_url, username, password):
     """Connexion avec Selenium pour récupérer le token CSRF et les cookies."""
     options = Options()
@@ -173,14 +174,14 @@ def main(login_url, target_url, username, password, terrains, date, hour):
 
 
 # # Définir les paramètres ici
-# if __name__ == "__main__":
-#     login_url = "https://padelfactory.gestion-sports.com/connexion.php"
-#     target_url = "https://padelfactory.gestion-sports.com/membre/compte/moyens-paiements.html"
-#     username = "bernardadrien26@gmail.com"
-#     password = "Espasers64_"
-#     terrains = [2519, 2520, 2521, 2522, 755, 756, 757, 758]
-#     date = "28/01/2025"
-#     hour = "18:00"
+if __name__ == "__main__":
+    login_url = "https://padelfactory.gestion-sports.com/connexion.php"
+    target_url = "https://padelfactory.gestion-sports.com/membre/compte/moyens-paiements.html"
+    username = "bernardadrien26@gmail.com"
+    password = "Espasers64_"
+    terrains = [2519, 2520, 2521, 2522, 755, 756, 757, 758]
+    date = "28/01/2025"
+    hour = "10:00"
 
-#     # Appeler la fonction main avec les paramètres
-#     main(login_url, target_url, username, password, terrains, date, hour)
+    # Appeler la fonction main avec les paramètres
+    main(login_url, target_url, username, password, terrains, date, hour)

@@ -79,7 +79,6 @@ def get_payment_method_id(driver, target_url):
         raise
 
 def reserver_padel(token_csrf, session_cookies, pm_id_param, date, hour, terrains):
-    """Effectuer une réservation avec Requests pour tous les terrains disponibles."""
     reservation_url = "https://padelfactory.gestion-sports.com/membre/reservation.html"
     headers = {
         "sec-ch-ua-platform": "\"Linux\"",
@@ -111,25 +110,30 @@ def reserver_padel(token_csrf, session_cookies, pm_id_param, date, hour, terrain
             "foodNumber": "0",
         }
 
-        # Encoder les données de formulaire
         encoded_data = urllib.parse.urlencode(reservation_data)
-
-        # Effectuer la requête POST
         session = requests.Session()
         session.cookies.update(session_cookies)
-        response = session.post(reservation_url, headers=headers, data=encoded_data)
-        print(response.json())
-        if response.status_code == 200:
-            response_json = response.json()
-            print(f"Réservation réussie pour le terrain {terrain_id} :", response_json)
-            if response_json.get("success"):
-                print(f"Réservation réussie pour le terrain {terrain_id} :", response_json)
-                return True
+
+        try:
+            response = session.post(reservation_url, headers=headers, data=encoded_data)
+            print("Code de statut :", response.status_code)
+            print("Réponse brute :", response.text)
+
+            if response.status_code == 200:
+                try:
+                    response_json = response.json()
+                    if response_json.get("success"):
+                        print(f"Réservation réussie pour le terrain {terrain_id} :", response_json)
+                        return True
+                    else:
+                        print(f"Échec de la réservation pour le terrain {terrain_id} :", response_json)
+                except ValueError:
+                    print("La réponse du serveur n'est pas un JSON valide.")
             else:
-                print(f"Échec de la réservation pour le terrain {terrain_id} :", response_json)
-        else:
-            print(f"Échec de la réservation pour le terrain {terrain_id} :",
-                  response.status_code, response.text)
+                print(f"Erreur HTTP {response.status_code}: {response.text}")
+
+        except requests.RequestException as e:
+            print(f"Erreur lors de la requête : {e}")
 
     print("Aucune réservation n'a pu être effectuée pour les terrains disponibles.")
     return False
@@ -151,7 +155,7 @@ def main_padel_factory(login_url, target_url, username, password, terrains, date
     try:
         # Étape 1 : Connexion et récupération des cookies
         driver, cookies = login_and_get_csrf_token_and_cookies(login_url, username, password)
-
+        print("Cookies récupérés :", cookies)
         # Étape 2 : Récupérer l'ID de méthode de paiement
         pm_id_param = get_payment_method_id(driver, target_url)
         if not pm_id_param:
