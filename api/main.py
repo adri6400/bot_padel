@@ -21,6 +21,7 @@ def reserve_padel_ground(request: ReservationRequest):
         request.target_date,
         request.target_time,
     )
+    print("result", result)
     return result
 
 @app.post("/reserve/padel-factory")
