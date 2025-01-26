@@ -16,22 +16,23 @@ class ReservationRequest(BaseModel):
 # Dictionnaire pour suivre les flags d'arrêt pour chaque utilisateur
 user_stop_flags = {}
 
+class StopRequest(BaseModel):
+    username: str
+
 @app.post("/stop")
-async def stop_reservation(request: BaseModel):
+async def stop_reservation(request: StopRequest):
     """
     Arrête les tentatives de réservation pour un utilisateur spécifique.
     Args:
         username (str): Identifiant de l'utilisateur.
     """
-    if not request.username:
-        return JSONResponse(content={"message": "Le champ 'username' est requis."}, status_code=400)
-
-    username = request.username
+    username = request.username  # Récupération du username depuis le modèle
     if username not in user_stop_flags:
         return JSONResponse(content={"message": f"Aucune recherche active trouvée pour l'utilisateur '{username}'."}, status_code=404)
     
     user_stop_flags[username] = True
     return JSONResponse(content={"message": f"Arrêt des tentatives pour l'utilisateur '{username}'."}, status_code=200)
+
 
 
 @app.post("/reserve/padel-ground")

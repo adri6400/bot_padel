@@ -113,7 +113,7 @@ if st.session_state.form_submitted:
 
     with col2:
         if st.button("Arrêter l'API"):
-            stop_api()
+            stop_api(st.session_state.username)
 
     # Afficher les détails des appels API
     if st.session_state.api_calls:
