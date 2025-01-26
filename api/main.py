@@ -15,7 +15,7 @@ class ReservationRequest(BaseModel):
 
 @app.post("/reserve/padel-ground")
 def reserve_padel_ground(request: ReservationRequest):
-    
+    result = False
     result = main_padel_ground(
         request.username,
         request.password,
