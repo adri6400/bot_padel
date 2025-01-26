@@ -12,10 +12,14 @@ import urllib.parse
 def login_and_get_csrf_token_and_cookies(login_url, username, password):
     """Connexion avec Selenium pour récupérer le token CSRF et les cookies."""
     options = Options()
+    options.add_argument("--headless=new")  # Mode Headless
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
-    options.add_argument("--start-maximized")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-infobars")
+    options.add_argument("--window-size=1920,1080")  # Définit une taille de fenêtre
+
     driver = webdriver.Chrome(service=Service(), options=options)
 
     try:
