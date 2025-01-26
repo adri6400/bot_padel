@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from api.scraping_api import main_padel_factory, main_padel_ground
-import subprocess
-import os
+
 
 
 app = FastAPI()
