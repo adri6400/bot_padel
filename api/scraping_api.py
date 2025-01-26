@@ -118,8 +118,7 @@ def reserver_padel(token_csrf, session_cookies, pm_id_param, date, hour, terrain
 
         try:
             response = session.post(reservation_url, headers=headers, data=encoded_data)
-            print("Code de statut :", response.status_code)
-            print("Réponse brute :", response.text)
+
 
             if response.status_code == 200:
                 try:
@@ -157,7 +156,6 @@ def main_padel_factory(login_url, target_url, username, password, terrains, date
     try:
         # Étape 1 : Connexion et récupération des cookies
         driver, cookies = login_and_get_csrf_token_and_cookies(login_url, username, password)
-        print("Cookies récupérés :", cookies)
         # Étape 2 : Récupérer l'ID de méthode de paiement
         pm_id_param = get_payment_method_id(driver, target_url)
         if not pm_id_param:
@@ -376,8 +374,10 @@ def book_slot_2(token, user_id, playground_id, timetable_block_id, start_time, e
     response = requests.put(booking_url, json=booking_data, headers=headers)
     if response.status_code == 201 or response.status_code == 200:
         print("Réservation confirmée :", response.json())
+        return True
     else:
         print("Erreur lors de la confirmation :", response.status_code, response.text)
+        return False
 
 
 def book_and_confirm_slot(token, user_id, date, start_hour, name):
@@ -403,7 +403,7 @@ def book_and_confirm_slot(token, user_id, date, start_hour, name):
     if booking_data and booking_data.get("id"):
         booking_id = booking_data["id"]
         print("Créneau réservé. Confirmation en cours...")
-        book_slot_2(
+        res = book_slot_2(
             token,
             user_id,
             slot["playground_id"],
@@ -414,6 +414,10 @@ def book_and_confirm_slot(token, user_id, date, start_hour, name):
             booking_id,
             name,
         )
+        return res
+    else : 
+        return False
+        
 def main_padel_ground(username, password, date, start_hour):
     """
     Point d'entrée principal pour le script.
@@ -424,7 +428,9 @@ def main_padel_ground(username, password, date, start_hour):
     :param start_hour: Heure de début pour la réservation (format HH:MM).
     """
     token = login_and_get_token(username, password)
+    res = False
     if token:
         user_id, name = get_user_id(token)
         if user_id:
-            book_and_confirm_slot(token, user_id, date, start_hour, name)
+            res = book_and_confirm_slot(token, user_id, date, start_hour, name)
+    return res
