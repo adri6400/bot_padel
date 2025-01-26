@@ -1,23 +1,25 @@
 import asyncio
 from datetime import datetime, time
-from playwright.async_api import async_playwright
 import streamlit as st 
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from bs4 import BeautifulSoup
+import requests
+import time
+import urllib.parse
 
 import os
 import subprocess
 st.set_page_config(
-    page_title="Réservation Padel",  # Titre de l'onglet
-    page_icon="images/favicon.png",  # Emoji ou chemin vers une image
+    page_title="Réservation Padel",  # Titre de l'onglet  # Emoji ou chemin vers une image
     layout="wide",  # Optionnel : pour un layout large
     initial_sidebar_state="expanded"  # Optionnel : pour un menu latéral déplié
 )
 
-# Vérifier si les navigateurs Playwright sont installés
-browsers_path = "/home/appuser/.cache/ms-playwright"
-if not os.path.exists(browsers_path):
-    print("Installing Playwright browsers...")
-    subprocess.run(["playwright", "install", "chromium", "firefox", "webkit"], check=True)
-    subprocess.run(["playwright", "install-deps"], check=True)
 
 # Initialiser l'état de session
 if "username" not in st.session_state:

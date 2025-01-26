@@ -1,27 +1,21 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from api.scraping_api import login_and_scrape_rugby_park, login_and_scrape_padel_factory
+from api.scraping_api import main_padel_factory, main_padel_ground
 import subprocess
 import os
 
-# Vérifier si les navigateurs Playwright sont installés
-browsers_path = "/home/appuser/.cache/ms-playwright"
-if not os.path.exists(browsers_path):
-    print("Installing Playwright browsers...")
-    subprocess.run(["playwright", "install"], check=True)
+
 app = FastAPI()
 
 class ReservationRequest(BaseModel):
-    login_url: str
     username: str
     password: str
     target_date: str
     target_time: str
 
-@app.post("/reserve/rugby-park")
-async def reserve_rugby_park(request: ReservationRequest):
-    result = await login_and_scrape_rugby_park(
-        request.login_url,
+@app.post("/reserve/padel-ground")
+def reserve_padel_ground(request: ReservationRequest):
+    result = main_padel_ground(
         request.username,
         request.password,
         request.target_date,
@@ -31,10 +25,15 @@ async def reserve_rugby_park(request: ReservationRequest):
 
 @app.post("/reserve/padel-factory")
 async def reserve_padel_factory(request: ReservationRequest):
-    result = await login_and_scrape_padel_factory(
-        request.login_url,
+    terrains = [2519, 2520, 2521, 2522, 755, 756, 757, 758]
+    login_url = "https://padelfactory.gestion-sports.com/connexion.php"
+    target_url = "https://padelfactory.gestion-sports.com/membre/compte/moyens-paiements.html"
+    result = main_padel_factory(
+        login_url,
+        target_url,
         request.username,
         request.password,
+        terrains,
         request.target_date,
         request.target_time,
     )
