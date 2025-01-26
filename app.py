@@ -25,15 +25,18 @@ PADEL_FACTORY_API_URL = "https://botpadel-production.up.railway.app/reserve/pade
 STOP_API_URL = "https://botpadel-production.up.railway.app/stop"
 
 # Fonction pour arrêter l'API
-def stop_api():
+# Fonction pour arrêter l'API
+def stop_api(username):
     try:
-        response = requests.post(STOP_API_URL)
+        payload = {"username": username}
+        response = requests.post(STOP_API_URL, json=payload)
         if response.status_code == 200:
-            st.success("API arrêtée avec succès.")
+            st.success(f"API arrêtée avec succès pour '{username}'.")
         else:
-            st.error(f"Erreur lors de l'arrêt de l'API : {response.text}")
+            st.error(f"Erreur lors de l'arrêt de l'API : {response.json().get('message')}")
     except Exception as e:
         st.error(f"Erreur lors de la communication avec l'API : {e}")
+
 
 # Titre principal
 st.title("Réservation Automatique de Padel")
