@@ -16,21 +16,86 @@ session_cookies = None
 csrf_token = None
 pm_id_param = None
 
-def validate_session(cookies, csrf_token):
+def login_and_get_csrf_token_and_cookies(login_url, username, password):
+    """
+    Se connecter au site et récupérer les cookies et le token CSRF.
+    """
+    session = requests.Session()
+
+    # Étape 1 : Charger la page de connexion pour récupérer les cookies initiaux
+    response = session.get(login_url)
+    if response.status_code != 200:
+        raise Exception("Impossible de charger la page de connexion.")
+
+    soup = BeautifulSoup(response.text, "html.parser")
+    
+    # Récupérer le token CSRF de la page de connexion
+    csrf_token_field = soup.find("input", {"name": "token_csrf"})
+    if not csrf_token_field:
+        raise Exception("Impossible de trouver le token CSRF sur la page de connexion.")
+    csrf_token = csrf_token_field["value"]
+
+    # Étape 2 : Soumettre le formulaire d'email
+    email_payload = {
+        "email": username,
+        "token_csrf": csrf_token,
+    }
+    email_response = session.post(login_url, data=email_payload)
+    if email_response.status_code != 200:
+        raise Exception("Erreur lors de l'envoi de l'email.")
+
+    # Étape 3 : Soumettre le formulaire de mot de passe
+    soup = BeautifulSoup(email_response.text, "html.parser")
+    csrf_token_field = soup.find("input", {"name": "token_csrf"})
+    if not csrf_token_field:
+        raise Exception("Impossible de trouver le token CSRF après l'envoi de l'email.")
+    csrf_token = csrf_token_field["value"]
+
+    password_payload = {
+        "pass": password,
+        "token_csrf": csrf_token,
+    }
+    password_response = session.post(login_url, data=password_payload)
+    if password_response.status_code != 200:
+        raise Exception("Erreur lors de la soumission du mot de passe.")
+
+    print("Connexion réussie. Cookies et CSRF token récupérés.")
+    return session.cookies, csrf_token
+
+
+def get_payment_method_id(session, target_url):
+    """
+    Navigue vers la page cible et extrait l'attribut data-id du bouton.
+    """
+    response = session.get(target_url)
+    if response.status_code != 200:
+        raise Exception("Impossible de charger la page des méthodes de paiement.")
+
+    soup = BeautifulSoup(response.text, "html.parser")
+    button = soup.find("button", {
+        "type": "button",
+        "class": "btn btn-outline-danger me-1 mb-1 ml-3 w-100 suppressPaymentMethod",
+        "data-toggle": "modal",
+        "data-target": "#modal_confirmation",
+    })
+    if not button:
+        raise Exception("Bouton avec data-id introuvable.")
+
+    data_id = button["data-id"]
+    print("ID de méthode de paiement récupéré :", data_id)
+    return data_id
+
+
+def validate_session(session, test_url):
     """
     Valide les cookies et le CSRF token en envoyant une requête test.
     """
-    test_url = "https://padelfactory.gestion-sports.com/membre/reservation.html"
     headers = {
         "x-requested-with": "XMLHttpRequest",
         "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "referer": "https://padelfactory.gestion-sports.com/membre/reservation.html",
     }
-    session = requests.Session()
-    session.cookies.update(cookies)
 
     try:
-        # Requête test
         response = session.get(test_url, headers=headers)
         if response.status_code == 200 and "reservation" in response.text:
             print("Session valide.")
@@ -43,68 +108,7 @@ def validate_session(cookies, csrf_token):
         return False
 
 
-def login_and_get_csrf_token_and_cookies(login_url, username, password):
-    """
-    Utilise Selenium pour récupérer les cookies et le token CSRF.
-    """
-    options = Options()
-    options.add_argument("--headless=new")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-
-    driver = webdriver.Chrome(service=Service(), options=options)
-
-    try:
-        # Charger la page de connexion
-        driver.get(login_url)
-
-        # Remplir le formulaire de connexion
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, "email"))).send_keys(username)
-        driver.find_element(By.CLASS_NAME, "contact100-form-btn").click()
-        time.sleep(2)
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, "pass"))).send_keys(password)
-        driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
-
-        # Attendre que la page soit complètement chargée
-        time.sleep(5)
-
-        # Récupérer les cookies
-        cookies = {cookie['name']: cookie['value'] for cookie in driver.get_cookies()}
-
-        # Récupérer le CSRF token
-        csrf_token = driver.find_element(By.NAME, "token_csrf").get_attribute("value")
-
-        print("Connexion réussie. Cookies et CSRF token récupérés.")
-        return driver, cookies, csrf_token
-
-    except Exception as e:
-        print(f"Erreur lors de la connexion : {e}")
-        driver.quit()
-        raise
-
-
-def get_payment_method_id(driver, target_url):
-    """
-    Navigue vers la page cible pour extraire l'attribut data-id du bouton.
-    """
-    try:
-        # Charger la page des méthodes de paiement
-        driver.get(target_url)
-        time.sleep(5)
-
-        # Rechercher le bouton cible
-        button = driver.find_element(By.CSS_SELECTOR, "button[data-target='#modal_confirmation']")
-        data_id = button.get_attribute("data-id")
-        print("ID de méthode de paiement récupéré :", data_id)
-        return data_id
-
-    except Exception as e:
-        print(f"Erreur lors de la récupération de l'ID de méthode de paiement : {e}")
-        raise
-
-
-
-def reserver_padel(csrf_token, session_cookies, pm_id_param, date, hour, terrain_id):
+def reserver_padel(session, csrf_token, pm_id_param, date, hour, terrain_id):
     """
     Tente de réserver un terrain.
     """
@@ -132,9 +136,6 @@ def reserver_padel(csrf_token, session_cookies, pm_id_param, date, hour, terrain
         "pmIdParam": pm_id_param,
         "foodNumber": "0",
     }
-
-    session = requests.Session()
-    session.cookies.update(session_cookies)
 
     try:
         response = session.post(reservation_url, headers=headers, data=reservation_data)
