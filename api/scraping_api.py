@@ -176,19 +176,20 @@ def main_padel_factory(login_url, target_url, username, password, terrains, date
     """
     global session_cookies, csrf_token, pm_id_param
 
-    while True:
-        if not session_cookies or not csrf_token or not validate_session(session_cookies, csrf_token):
-            print("Récupération des nouveaux cookies et token...")
-            session_cookies, csrf_token = login_and_get_csrf_token(username, password)
-            pm_id_param = get_payment_method_id(session_cookies, target_url)
 
-        for terrain_id in terrains:
-            if reserver_padel(csrf_token, session_cookies, pm_id_param, date, hour, terrain_id):
-                print("Réservation réussie !")
-                return True
+    print("Récupération des nouveaux cookies et token...")
+    session_cookies, csrf_token = login_and_get_csrf_token(username, password)
+    pm_id_param = get_payment_method_id(session_cookies, target_url)
 
-        print("Aucune réservation possible. Réessai dans 30 secondes...")
-        time.sleep(30)
+    for terrain_id in terrains:
+        if reserver_padel(csrf_token, session_cookies, pm_id_param, date, hour, terrain_id):
+            print("Réservation réussie !")
+            return True
+
+    print("Aucune réservation possible. Réessai dans 30 secondes...")
+
+
+
 import requests
 from datetime import datetime, timedelta
 
