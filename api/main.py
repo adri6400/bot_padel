@@ -4,51 +4,93 @@ from fastapi.responses import JSONResponse
 from api.scraping_api import main_padel_factory, main_padel_ground
 from datetime import datetime, timedelta
 import asyncio
+import json
+from pathlib import Path
 
 app = FastAPI()
 
+# Fichier JSON pour enregistrer les recherches
+SEARCHES_FILE = Path("searches.json")
+
+# Fonction utilitaire pour charger/enregistrer les recherches
+def load_searches():
+    if SEARCHES_FILE.exists():
+        with open(SEARCHES_FILE, "r") as f:
+            return json.load(f)
+    return []
+
+def save_searches(data):
+    with open(SEARCHES_FILE, "w") as f:
+        json.dump(data, f, indent=4)
+
+# Modèles de données
 class ReservationRequest(BaseModel):
     username: str
     password: str
     target_date: str
     target_time: str
 
-# Dictionnaire pour suivre les flags d'arrêt pour chaque utilisateur
-user_stop_flags = {}
-
 class StopRequest(BaseModel):
     username: str
+    search_id: str
+
+# Flags d'arrêt des recherches
+user_stop_flags = {}
 
 @app.post("/stop")
 async def stop_reservation(request: StopRequest):
     """
-    Arrête les tentatives de réservation pour un utilisateur spécifique.
-    Args:
-        username (str): Identifiant de l'utilisateur.
+    Arrête une recherche spécifique pour un utilisateur.
     """
-    username = request.username  # Récupération du username depuis le modèle
-    if username not in user_stop_flags:
-        return JSONResponse(content={"message": f"Aucune recherche active trouvée pour l'utilisateur '{username}'."}, status_code=404)
+    searches = load_searches()
+    updated_searches = [s for s in searches if s.get("id") != request.search_id or s.get("username") != request.username]
+
+    if len(searches) == len(updated_searches):
+        return JSONResponse(content={"message": "Aucune recherche correspondante trouvée."}, status_code=404)
     
-    user_stop_flags[username] = True
-    return JSONResponse(content={"message": f"Arrêt des tentatives pour l'utilisateur '{username}'."}, status_code=200)
+    save_searches(updated_searches)
+    user_stop_flags[request.search_id] = True
+    return JSONResponse(content={"message": "Recherche arrêtée avec succès."}, status_code=200)
 
-
+@app.get("/searches")
+async def list_searches():
+    """
+    Liste toutes les recherches en cours.
+    """
+    return load_searches()
 
 @app.post("/reserve/padel-ground")
 async def reserve_padel_ground(request: ReservationRequest):
-    # Initialiser le flag d'arrêt pour cet utilisateur
-    user_stop_flags[request.username] = False
+    """
+    Recherche pour le Padel Ground.
+    """
+    search_id = f"{request.username}-{request.target_date}-{request.target_time}-padel-ground"
+    
+    # Enregistrer la recherche
+    searches = load_searches()
+    searches.append({
+        "id": search_id,
+        "username": request.username,
+        "date": request.target_date,
+        "heure": request.target_time,
+        "lieu": "Padel Ground",
+        "timestamp": datetime.now().isoformat(),
+    })
+    save_searches(searches)
 
-    max_duration = timedelta(hours=3)  # Durée maximale (3 heures)
-    start_time = datetime.now()  # Heure de début des tentatives
+    # Initialiser le flag d'arrêt
+    user_stop_flags[search_id] = False
+
+    max_duration = timedelta(hours=3)
+    start_time = datetime.now()
     attempt = 1
 
     while datetime.now() - start_time < max_duration:
-        if user_stop_flags.get(request.username):
-            return JSONResponse(content={"message": f"Recherche arrêtée pour l'utilisateur '{request.username}'."}, status_code=200)
+        if user_stop_flags.get(search_id):
+            return JSONResponse(content={"message": "Recherche arrêtée avec succès."}, status_code=200)
 
-        print(f"Tentative {attempt} pour le Padel Ground (Utilisateur: {request.username})...")
+        print(f"Tentative {attempt} pour Padel Ground (Utilisateur: {request.username})...")
+        # Appel à la fonction spécifique
         result = main_padel_ground(
             request.username,
             request.password,
@@ -56,60 +98,60 @@ async def reserve_padel_ground(request: ReservationRequest):
             request.target_time,
         )
         if result:
-            # Stopper uniquement les recherches pour cet utilisateur
-            user_stop_flags[request.username] = True
-            return JSONResponse(content={"message": f"Réservation réussie au Padel Ground pour '{request.username}'."}, status_code=200)
-        else:
-            print(f"Échec de la tentative {attempt} pour '{request.username}'. Nouvelle tentative dans 30 secondes...")
-            attempt += 1
-            await asyncio.sleep(30)  # Attendre 30 secondes avant la prochaine tentative
+            user_stop_flags[search_id] = True
+            return JSONResponse(content={"message": "Réservation réussie."}, status_code=200)
+        
+        attempt += 1
+        await asyncio.sleep(30)
 
-    # Si la durée maximale est atteinte
-    return JSONResponse(content={"message": f"Échec de la réservation après 3 heures pour '{request.username}'."}, status_code=408)
-
+    return JSONResponse(content={"message": "Durée maximale atteinte sans succès."}, status_code=408)
 
 @app.post("/reserve/padel-factory")
 async def reserve_padel_factory(request: ReservationRequest):
-    # Initialiser le flag d'arrêt pour cet utilisateur
-    user_stop_flags[request.username] = False
+    """
+    Recherche pour le Padel Factory.
+    """
+    search_id = f"{request.username}-{request.target_date}-{request.target_time}-padel-factory"
 
-    terrains = [2519, 2520, 2521, 2522, 755, 756, 757, 758]
-    login_url = "https://padelfactory.gestion-sports.com/connexion.php"
-    target_url = "https://padelfactory.gestion-sports.com/membre/compte/moyens-paiements.html"
+    # Enregistrer la recherche
+    searches = load_searches()
+    searches.append({
+        "id": search_id,
+        "username": request.username,
+        "date": request.target_date,
+        "heure": request.target_time,
+        "lieu": "Padel Factory",
+        "timestamp": datetime.now().isoformat(),
+    })
+    save_searches(searches)
 
-    # Conversion de la date au format attendu
-    print(f"Date de réservation : {request.target_date}")
-    date_objet = datetime.strptime(request.target_date, "%Y-%m-%d")
-    date = date_objet.strftime("%d/%m/%Y")
+    # Initialiser le flag d'arrêt
+    user_stop_flags[search_id] = False
 
-    print(f"Heure de réservation : {request.target_time}")
-
-    max_duration = timedelta(hours=3)  # Durée maximale (3 heures)
-    start_time = datetime.now()  # Heure de début des tentatives
+    max_duration = timedelta(hours=3)
+    start_time = datetime.now()
     attempt = 1
 
     while datetime.now() - start_time < max_duration:
-        if user_stop_flags.get(request.username):
-            return JSONResponse(content={"message": f"Recherche arrêtée pour l'utilisateur '{request.username}'."}, status_code=200)
+        if user_stop_flags.get(search_id):
+            return JSONResponse(content={"message": "Recherche arrêtée avec succès."}, status_code=200)
 
-        print(f"Tentative {attempt} pour le Padel Factory (Utilisateur: {request.username})...")
+        print(f"Tentative {attempt} pour Padel Factory (Utilisateur: {request.username})...")
+        # Appel à la fonction spécifique
         result = main_padel_factory(
-            login_url,
-            target_url,
+            "https://padelfactory.gestion-sports.com/connexion.php",
+            "https://padelfactory.gestion-sports.com/membre/compte/moyens-paiements.html",
             request.username,
             request.password,
-            terrains,
-            date,
+            [2519, 2520, 2521, 2522, 755, 756, 757, 758],
+            datetime.strptime(request.target_date, "%Y-%m-%d").strftime("%d/%m/%Y"),
             request.target_time,
         )
         if result:
-            # Stopper uniquement les recherches pour cet utilisateur
-            user_stop_flags[request.username] = True
-            return JSONResponse(content={"message": f"Réservation réussie au Padel Factory pour '{request.username}'."}, status_code=200)
-        else:
-            print(f"Échec de la tentative {attempt} pour '{request.username}'. Nouvelle tentative dans 30 secondes...")
-            attempt += 1
-            await asyncio.sleep(30)  # Attendre 30 secondes avant la prochaine tentative
+            user_stop_flags[search_id] = True
+            return JSONResponse(content={"message": "Réservation réussie."}, status_code=200)
+        
+        attempt += 1
+        await asyncio.sleep(30)
 
-    # Si la durée maximale est atteinte
-    return JSONResponse(content={"message": f"Échec de la réservation après 3 heures pour '{request.username}'."}, status_code=408)
+    return JSONResponse(content={"message": "Durée maximale atteinte sans succès."}, status_code=408)

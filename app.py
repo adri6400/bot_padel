@@ -119,3 +119,21 @@ if st.session_state.form_submitted:
     if st.session_state.api_calls:
         st.write("### Historique des appels API")
         st.table(st.session_state.api_calls)  # Afficher le tableau des appels
+# Afficher les recherches en cours
+    st.write("### Recherches en cours")
+    response = requests.get("https://botpadel-production.up.railway.app/searches")
+    searches = response.json()
+
+    if searches:
+        for search in searches:
+            if search["username"] == st.session_state.username:
+                st.write(f"**{search['lieu']}** - {search['date']} à {search['heure']}")
+                if st.button(f"Arrêter la recherche ({search['lieu']}, {search['date']}, {search['heure']})"):
+                    payload = {"username": st.session_state.username, "search_id": search["id"]}
+                    stop_response = requests.post("https://botpadel-production.up.railway.app/stop", json=payload)
+                    if stop_response.status_code == 200:
+                        st.success("Recherche arrêtée avec succès.")
+                    else:
+                        st.error(f"Erreur : {stop_response.json().get('message')}")
+    else:
+        st.write("Aucune recherche active.")
