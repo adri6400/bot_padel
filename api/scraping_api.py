@@ -16,84 +16,18 @@ session_cookies = None
 csrf_token = None
 pm_id_param = None
 
-def login_and_get_csrf_token_and_cookies(login_url, username, password):
-    """
-    Se connecter au site et récupérer les cookies et le token CSRF.
-    """
-    session = requests.Session()
 
-    # Étape 1 : Charger la page de connexion pour récupérer les cookies initiaux
-    response = session.get(login_url)
-    if response.status_code != 200:
-        raise Exception("Impossible de charger la page de connexion.")
-
-    soup = BeautifulSoup(response.text, "html.parser")
-    
-    # Récupérer le token CSRF de la page de connexion
-    csrf_token_field = soup.find("input", {"name": "token_csrf"})
-    if not csrf_token_field:
-        raise Exception("Impossible de trouver le token CSRF sur la page de connexion.")
-    csrf_token = csrf_token_field["value"]
-
-    # Étape 2 : Soumettre le formulaire d'email
-    email_payload = {
-        "email": username,
-        "token_csrf": csrf_token,
-    }
-    email_response = session.post(login_url, data=email_payload)
-    if email_response.status_code != 200:
-        raise Exception("Erreur lors de l'envoi de l'email.")
-
-    # Étape 3 : Soumettre le formulaire de mot de passe
-    soup = BeautifulSoup(email_response.text, "html.parser")
-    csrf_token_field = soup.find("input", {"name": "token_csrf"})
-    if not csrf_token_field:
-        raise Exception("Impossible de trouver le token CSRF après l'envoi de l'email.")
-    csrf_token = csrf_token_field["value"]
-
-    password_payload = {
-        "pass": password,
-        "token_csrf": csrf_token,
-    }
-    password_response = session.post(login_url, data=password_payload)
-    if password_response.status_code != 200:
-        raise Exception("Erreur lors de la soumission du mot de passe.")
-
-    print("Connexion réussie. Cookies et CSRF token récupérés.")
-    return session.cookies, csrf_token
-
-
-def get_payment_method_id(session, target_url):
-    """
-    Navigue vers la page cible et extrait l'attribut data-id du bouton.
-    """
-    response = session.get(target_url)
-    if response.status_code != 200:
-        raise Exception("Impossible de charger la page des méthodes de paiement.")
-
-    soup = BeautifulSoup(response.text, "html.parser")
-    button = soup.find("button", {
-        "type": "button",
-        "class": "btn btn-outline-danger me-1 mb-1 ml-3 w-100 suppressPaymentMethod",
-        "data-toggle": "modal",
-        "data-target": "#modal_confirmation",
-    })
-    if not button:
-        raise Exception("Bouton avec data-id introuvable.")
-
-    data_id = button["data-id"]
-    print("ID de méthode de paiement récupéré :", data_id)
-    return data_id
-
-
-def validate_session(session, test_url):
+def validate_session(cookies, csrf_token):
     """
     Valide les cookies et le CSRF token en envoyant une requête test.
     """
+    test_url = "https://padelfactory.gestion-sports.com/membre/reservation.html"
     headers = {
         "x-requested-with": "XMLHttpRequest",
-        "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "referer": "https://padelfactory.gestion-sports.com/membre/reservation.html",
     }
+    session = requests.Session()
+    session.cookies.update(cookies)
 
     try:
         response = session.get(test_url, headers=headers)
@@ -108,17 +42,98 @@ def validate_session(session, test_url):
         return False
 
 
-def reserver_padel(session, csrf_token, pm_id_param, date, hour, terrain_id):
+def login_and_get_csrf_token(email, password):
+    """
+    Effectue la connexion à l'application et récupère les cookies et le CSRF token.
+    """
+    session = requests.Session()
+
+    # Étape 1 : Vérification de l'email
+    check_email_url = "https://padelfactory.gestion-sports.com/traitement/connexion.php"
+    headers = {
+        "sec-ch-ua-platform": "\"Linux\"",
+        "referer": "https://padelfactory.gestion-sports.com/connexion.php?",
+        "x-requested-with": "XMLHttpRequest",
+        "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+        "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+    }
+    check_email_payload = f"ajax=checkEmail&email={email}&compte=user"
+    response = session.post(check_email_url, headers=headers, data=check_email_payload)
+    if response.status_code != 200 or "ok" not in response.json().get("status", ""):
+        raise Exception("Échec lors de la vérification de l'email.")
+
+    print("Étape 1 : Email vérifié avec succès.")
+
+    # Étape 2 : Connexion utilisateur
+    login_payload = (
+        f"ajax=connexionUser&id_club=107&email={email}&form_ajax=1&pass={password}"
+        "&compte=user&playeridonesignal=0&identifiant=identifiant&externCo=true"
+    )
+    login_response = session.post(check_email_url, headers=headers, data=login_payload)
+    if login_response.status_code != 200:
+        raise Exception("Échec lors de la connexion utilisateur.")
+
+    print("Étape 2 : Connexion réussie.")
+
+    # Étape 3 : Accéder à la page utilisateur pour récupérer le CSRF token
+    user_page_url = "https://padelfactory.gestion-sports.com/membre/"
+    user_page_response = session.get(user_page_url, headers=headers)
+    if user_page_response.status_code != 200:
+        raise Exception("Échec lors de l'accès à la page utilisateur.")
+
+    soup = BeautifulSoup(user_page_response.text, "html.parser")
+    csrf_token_field = soup.find("input", {"name": "token_csrf"})
+    if not csrf_token_field:
+        raise Exception("Impossible de trouver le token CSRF.")
+
+    csrf_token = csrf_token_field["value"]
+    print("Étape 3 : Token CSRF récupéré avec succès.")
+
+    cookies = session.cookies.get_dict()
+    return cookies, csrf_token
+
+
+def get_payment_method_id(cookies, target_url):
+    """
+    Effectue une requête HTTP vers la page cible et extrait l'attribut `data-id` du bouton.
+    """
+    headers = {
+        "referer": "https://padelfactory.gestion-sports.com/membre/",
+        "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+    }
+    session = requests.Session()
+    session.cookies.update(cookies)
+
+    try:
+        response = session.get(target_url, headers=headers)
+        if response.status_code != 200:
+            raise Exception(f"Échec du chargement de la page : {response.status_code}")
+
+        soup = BeautifulSoup(response.text, "html.parser")
+        button = soup.find("button", {"data-target": "#modal_confirmation"})
+        if not button:
+            raise Exception("Bouton avec l'attribut data-target='#modal_confirmation' introuvable.")
+
+        data_id = button.get("data-id")
+        if not data_id:
+            raise Exception("Impossible de trouver l'attribut data-id sur le bouton.")
+
+        print("ID de méthode de paiement récupéré :", data_id)
+        return data_id
+    except Exception as e:
+        print(f"Erreur lors de la récupération de l'ID de méthode de paiement : {e}")
+        raise
+
+
+def reserver_padel(csrf_token, cookies, pm_id_param, date, hour, terrain_id):
     """
     Tente de réserver un terrain.
     """
     reservation_url = "https://padelfactory.gestion-sports.com/membre/reservation.html"
     headers = {
         "x-requested-with": "XMLHttpRequest",
-        "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
         "referer": "https://padelfactory.gestion-sports.com/membre/reservation.html",
     }
-
     reservation_data = {
         "ajax": "addResa",
         "token_csrf": csrf_token,
@@ -136,6 +151,8 @@ def reserver_padel(session, csrf_token, pm_id_param, date, hour, terrain_id):
         "pmIdParam": pm_id_param,
         "foodNumber": "0",
     }
+    session = requests.Session()
+    session.cookies.update(cookies)
 
     try:
         response = session.post(reservation_url, headers=headers, data=reservation_data)
@@ -148,10 +165,10 @@ def reserver_padel(session, csrf_token, pm_id_param, date, hour, terrain_id):
                 print(f"Échec de la réservation pour le terrain {terrain_id} :", response_json)
         else:
             print(f"Erreur HTTP {response.status_code}: {response.text}")
-    except requests.RequestException as e:
+    except Exception as e:
         print(f"Erreur lors de la requête : {e}")
-
     return False
+
 
 def main_padel_factory(login_url, target_url, username, password, terrains, date, hour):
     """
@@ -160,24 +177,18 @@ def main_padel_factory(login_url, target_url, username, password, terrains, date
     global session_cookies, csrf_token, pm_id_param
 
     while True:
-        # Valider ou renouveler la session
-        if session_cookies is None or csrf_token is None or not validate_session(session_cookies, csrf_token):
+        if not session_cookies or not csrf_token or not validate_session(session_cookies, csrf_token):
             print("Récupération des nouveaux cookies et token...")
-            driver, session_cookies, csrf_token = login_and_get_csrf_token_and_cookies(login_url, username, password)
-            pm_id_param = get_payment_method_id(driver, target_url)
-            driver.quit()
+            session_cookies, csrf_token = login_and_get_csrf_token(username, password)
+            pm_id_param = get_payment_method_id(session_cookies, target_url)
 
-        # Parcourir les terrains pour réserver
         for terrain_id in terrains:
             if reserver_padel(csrf_token, session_cookies, pm_id_param, date, hour, terrain_id):
                 print("Réservation réussie !")
                 return True
 
-        # Attendre un moment avant de réessayer
         print("Aucune réservation possible. Réessai dans 30 secondes...")
-        
-
-
+        time.sleep(30)
 import requests
 from datetime import datetime, timedelta
 
