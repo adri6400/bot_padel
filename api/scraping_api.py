@@ -1,20 +1,10 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.webdriver import WebDriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+
 from bs4 import BeautifulSoup
 import requests
 import time
 import urllib.parse
 
-# Variables globales
-session_cookies = None
-csrf_token = None
-pm_id_param = None
+
 
 
 def validate_session(cookies, csrf_token):
@@ -174,7 +164,6 @@ def main_padel_factory(login_url, target_url, username, password, terrains, date
     """
     Optimisation pour réserver au Padel Factory.
     """
-    global session_cookies, csrf_token, pm_id_param
 
 
     print("Récupération des nouveaux cookies et token...")
@@ -182,6 +171,7 @@ def main_padel_factory(login_url, target_url, username, password, terrains, date
     pm_id_param = get_payment_method_id(session_cookies, target_url)
 
     for terrain_id in terrains:
+        time.sleep(3)
         if reserver_padel(csrf_token, session_cookies, pm_id_param, date, hour, terrain_id):
             print("Réservation réussie !")
             return True
