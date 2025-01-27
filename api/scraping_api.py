@@ -11,23 +11,52 @@ import requests
 import time
 import urllib.parse
 
+# Variables globales
+session_cookies = None
+csrf_token = None
+pm_id_param = None
+
+def validate_session(cookies, csrf_token):
+    """
+    Valide les cookies et le CSRF token en envoyant une requête test.
+    """
+    test_url = "https://padelfactory.gestion-sports.com/membre/reservation.html"
+    headers = {
+        "x-requested-with": "XMLHttpRequest",
+        "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "referer": "https://padelfactory.gestion-sports.com/membre/reservation.html",
+    }
+    session = requests.Session()
+    session.cookies.update(cookies)
+
+    try:
+        # Requête test
+        response = session.get(test_url, headers=headers)
+        if response.status_code == 200 and "reservation" in response.text:
+            print("Session valide.")
+            return True
+        else:
+            print("Session invalide.")
+            return False
+    except Exception as e:
+        print(f"Erreur lors de la validation de la session : {e}")
+        return False
+
+
 def login_and_get_csrf_token_and_cookies(login_url, username, password):
-    """Connexion avec Selenium pour récupérer le token CSRF et les cookies."""
+    """
+    Utilise Selenium pour récupérer les cookies et le token CSRF.
+    """
     options = Options()
-    options.add_argument("--headless=new")  # Mode Headless
+    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--disable-extensions")
-    options.add_argument("--disable-infobars")
-    options.add_argument("--window-size=1920,1080")  # Définit une taille de fenêtre
 
     driver = webdriver.Chrome(service=Service(), options=options)
 
     try:
         # Charger la page de connexion
         driver.get(login_url)
-        print("Page de connexion chargée.")
 
         # Remplir le formulaire de connexion
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, "email"))).send_keys(username)
@@ -35,151 +64,117 @@ def login_and_get_csrf_token_and_cookies(login_url, username, password):
         time.sleep(2)
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, "pass"))).send_keys(password)
         driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
-        print("Connexion réussie.")
 
         # Attendre que la page soit complètement chargée
         time.sleep(5)
 
-        # Récupérer les cookies de session
-        cookies = driver.get_cookies()
-        session_cookies = {cookie['name']: cookie['value'] for cookie in cookies}
-        return driver, session_cookies
+        # Récupérer les cookies
+        cookies = {cookie['name']: cookie['value'] for cookie in driver.get_cookies()}
+
+        # Récupérer le CSRF token
+        csrf_token = driver.find_element(By.NAME, "token_csrf").get_attribute("value")
+
+        print("Connexion réussie. Cookies et CSRF token récupérés.")
+        return driver, cookies, csrf_token
 
     except Exception as e:
-        print(f"Erreur : {e}")
+        print(f"Erreur lors de la connexion : {e}")
         driver.quit()
         raise
 
-def get_payment_method_id(driver, target_url):
-    """Navigue vers la page cible et extrait l'attribut data-id du bouton."""
-    try:
-        # Aller à l'URL cible
-        driver.get(target_url)
-        time.sleep(5)  # Assurez-vous que la page est chargée
 
-        # Extraire le HTML de la page avec BeautifulSoup
-        soup = BeautifulSoup(driver.page_source, 'html.parser')
+def get_payment_method_id(driver, target_url):
+    """
+    Navigue vers la page cible pour extraire l'attribut data-id du bouton.
+    """
+    try:
+        # Charger la page des méthodes de paiement
+        driver.get(target_url)
+        time.sleep(5)
 
         # Rechercher le bouton cible
-        button = soup.find("button", {
-            "type": "button",
-            "class": "btn btn-outline-danger me-1 mb-1 ml-3 w-100 suppressPaymentMethod",
-            "data-toggle": "modal",
-            "data-target": "#modal_confirmation"
-        })
-
-        if button:
-            data_id = button.get("data-id")
-            print("Valeur data-id trouvée :", data_id)
-            return data_id
-        else:
-            print("Bouton introuvable.")
-            return None
+        button = driver.find_element(By.CSS_SELECTOR, "button[data-target='#modal_confirmation']")
+        data_id = button.get_attribute("data-id")
+        print("ID de méthode de paiement récupéré :", data_id)
+        return data_id
 
     except Exception as e:
-        print(f"Erreur : {e}")
+        print(f"Erreur lors de la récupération de l'ID de méthode de paiement : {e}")
         raise
 
-def reserver_padel(token_csrf, session_cookies, pm_id_param, date, hour, terrains):
+
+
+def reserver_padel(csrf_token, session_cookies, pm_id_param, date, hour, terrain_id):
+    """
+    Tente de réserver un terrain.
+    """
     reservation_url = "https://padelfactory.gestion-sports.com/membre/reservation.html"
     headers = {
-        "sec-ch-ua-platform": "\"Linux\"",
-        "referer": "https://padelfactory.gestion-sports.com/membre/reservation.html",
-        "sec-ch-ua": "\"Not?A_Brand\";v=\"99\", \"Chromium\";v=\"130\"",
-        "sec-ch-ua-mobile": "?0",
         "x-requested-with": "XMLHttpRequest",
-        "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
-        "accept": "application/json, text/javascript, */*; q=0.01",
-        "content-type": "application/x-www-form-urlencoded; charset=UTF-8"
+        "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "referer": "https://padelfactory.gestion-sports.com/membre/reservation.html",
     }
 
-    for terrain_id in terrains:
-        reservation_data = {
-            "ajax": "addResa",
-            "token_csrf": token_csrf,
-            "date": date,
-            "hour": hour,
-            "duration": "90",
-            "partners": "",
-            "paiement": "inactif",
-            "idSport": "265",
-            "creaPartie": "false",
-            "idCourt": str(terrain_id),
-            "pay": "false",
-            "token": "false",
-            "saveCard": "0",
-            "pmIdParam": pm_id_param,
-            "foodNumber": "0",
-        }
+    reservation_data = {
+        "ajax": "addResa",
+        "token_csrf": csrf_token,
+        "date": date,
+        "hour": hour,
+        "duration": "90",
+        "partners": "",
+        "paiement": "inactif",
+        "idSport": "265",
+        "creaPartie": "false",
+        "idCourt": str(terrain_id),
+        "pay": "false",
+        "token": "false",
+        "saveCard": "0",
+        "pmIdParam": pm_id_param,
+        "foodNumber": "0",
+    }
 
-        encoded_data = urllib.parse.urlencode(reservation_data)
-        session = requests.Session()
-        session.cookies.update(session_cookies)
+    session = requests.Session()
+    session.cookies.update(session_cookies)
 
-        try:
-            response = session.post(reservation_url, headers=headers, data=encoded_data)
-
-
-            if response.status_code == 200:
-                try:
-                    response_json = response.json()
-                    if response_json.get("success"):
-                        print(f"Réservation réussie pour le terrain {terrain_id} :", response_json)
-                        return True
-                    else:
-                        print(f"Échec de la réservation pour le terrain {terrain_id} :", response_json)
-                except ValueError:
-                    print("La réponse du serveur n'est pas un JSON valide.")
+    try:
+        response = session.post(reservation_url, headers=headers, data=reservation_data)
+        if response.status_code == 200:
+            response_json = response.json()
+            if response_json.get("success"):
+                print(f"Réservation réussie pour le terrain {terrain_id} :", response_json)
+                return True
             else:
-                print(f"Erreur HTTP {response.status_code}: {response.text}")
+                print(f"Échec de la réservation pour le terrain {terrain_id} :", response_json)
+        else:
+            print(f"Erreur HTTP {response.status_code}: {response.text}")
+    except requests.RequestException as e:
+        print(f"Erreur lors de la requête : {e}")
 
-        except requests.RequestException as e:
-            print(f"Erreur lors de la requête : {e}")
-
-    print("Aucune réservation n'a pu être effectuée pour les terrains disponibles.")
     return False
 
 def main_padel_factory(login_url, target_url, username, password, terrains, date, hour):
     """
-    Fonction principale pour gérer tout le processus de réservation de padel.
-    
-    Args:
-        login_url (str): URL de connexion.
-        target_url (str): URL pour récupérer l'ID de méthode de paiement.
-        username (str): Nom d'utilisateur pour la connexion.
-        password (str): Mot de passe pour la connexion.
-        terrains (list): Liste des ID des terrains à tester pour la réservation.
-        date (str): Date de la réservation (format : JJ/MM/AAAA).
-        hour (str): Heure de la réservation (format : HH:MM).
+    Optimisation pour réserver au Padel Factory.
     """
-    driver = None  # Initialiser la variable driver pour garantir sa fermeture en cas d'erreur
-    try:
-        # Étape 1  : Connexion et récupération des cookies
-        driver, cookies = login_and_get_csrf_token_and_cookies(login_url, username, password)
-        # Étape 2 : Récupérer l'ID de méthode de paiement
-        pm_id_param = get_payment_method_id(driver, target_url)
-        if not pm_id_param:
-            print("Impossible de trouver le paramètre pmIdParam.")
-            return  # Terminer l'exécution si pmIdParam est introuvable
+    global session_cookies, csrf_token, pm_id_param
 
-        print("ID Méthode de paiement :", pm_id_param)
-
-        # Étape 3 : Récupérer le token CSRF
-        token_csrf = driver.find_element(By.NAME, "token_csrf").get_attribute("value")
-        print("Token CSRF :", token_csrf)
-
-        # Étape 4 : Parcourir les terrains pour réserver
-        success = reserver_padel(token_csrf, cookies, pm_id_param, date, hour, terrains)
-        if not success:
-            print("Aucune réservation n'a pu être effectuée.")
-
-    except Exception as e:
-        print(f"Erreur : {e}")
-    finally:
-        # Fermer le navigateur
-        if driver:
+    while True:
+        # Valider ou renouveler la session
+        if session_cookies is None or csrf_token is None or not validate_session(session_cookies, csrf_token):
+            print("Récupération des nouveaux cookies et token...")
+            driver, session_cookies, csrf_token = login_and_get_csrf_token_and_cookies(login_url, username, password)
+            pm_id_param = get_payment_method_id(driver, target_url)
             driver.quit()
 
+        # Parcourir les terrains pour réserver
+        for terrain_id in terrains:
+            if reserver_padel(csrf_token, session_cookies, pm_id_param, date, hour, terrain_id):
+                print("Réservation réussie !")
+                return True
+
+        # Attendre un moment avant de réessayer
+        print("Aucune réservation possible. Réessai dans 30 secondes...")
+        
 
 
 import requests
