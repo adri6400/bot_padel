@@ -146,16 +146,19 @@ if st.session_state.form_submitted:
             stop_api(st.session_state.username)
 
 
-# Afficher les recherches en cours
+
+
+        # Afficher les recherches en cours
     st.write("### Recherches en cours")
     response = requests.get("https://botpadel-production.up.railway.app/searches")
     searches = response.json()
 
     if searches:
-        for search in searches:
+        for index, search in enumerate(searches):  # Utiliser un index pour générer des clés uniques
             if search["username"] == st.session_state.username:
                 st.write(f"**{search['lieu']}** - {search['date']} à {search['heure']}")
-                if st.button(f"Arrêter la recherche ({search['lieu']}, {search['date']}, {search['heure']})"):
+                # Ajouter un paramètre `key` unique pour chaque bouton
+                if st.button(f"Arrêter la recherche ({search['lieu']}, {search['date']}, {search['heure']})", key=f"stop_{index}"):
                     payload = {"username": st.session_state.username, "search_id": search["id"]}
                     stop_response = requests.post("https://botpadel-production.up.railway.app/stop", json=payload)
                     if stop_response.status_code == 200:
