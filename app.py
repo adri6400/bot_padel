@@ -31,14 +31,15 @@ if "api_calls" not in st.session_state:
 PADEL_GROUND_API_URL = "http://raspberrypi.tail3b5db3.ts.net:8080/reserve/padel-ground"
 PADEL_FACTORY_API_URL = "http://raspberrypi.tail3b5db3.ts.net:8080/reserve/padel-factory"
 STOP_API_URL = "http://raspberrypi.tail3b5db3.ts.net:8080/stop"
+
 # Fonction pour arrêter l'API
 # Fonction pour arrêter l'API
-def stop_api(username):
+def stop_api():
     try:
-        payload = {"username": username}
-        response = requests.post(STOP_API_URL, json=payload)
+        
+        response = requests.post("http://raspberrypi.tail3b5db3.ts.net:8080/stop_all")
         if response.status_code == 200:
-            st.success(f"API arrêtée avec succès pour '{username}'.")
+            st.success(f"API arrêtée avec succès.")
         else:
             st.error(f"Erreur lors de l'arrêt de l'API : {response.json().get('message')}")
     except Exception as e:
@@ -163,7 +164,7 @@ if st.session_state.form_submitted:
                 # Ajouter un paramètre `key` unique pour chaque bouton
                 if st.button(f"Arrêter la recherche ({search['lieu']}, {search['date']}, {search['heure']})", key=f"stop_{index}"):
                     payload = {"username": st.session_state.username, "search_id": search["id"]}
-                    stop_response = requests.post("https://botpadel-production.up.railway.app/stop", json=payload)
+                    stop_response = requests.post("http://raspberrypi.tail3b5db3.ts.net:8080/stop", json=payload)
                     if stop_response.status_code == 200:
                         st.success("Recherche arrêtée avec succès.")
                     else:
