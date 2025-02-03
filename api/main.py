@@ -43,10 +43,16 @@ async def stop_reservation(request: StopRequest):
     Arrête une recherche spécifique pour un utilisateur.
     """
     searches = load_searches()
-    updated_searches = [s for s in searches if s.get("id") != request.search_id or s.get("username") != request.username]
+    updated_searches = [
+        s for s in searches 
+        if s.get("id") != request.search_id or s.get("username") != request.username
+    ]
 
     if len(searches) == len(updated_searches):
-        return JSONResponse(content={"message": "Aucune recherche correspondante trouvée."}, status_code=404)
+        return JSONResponse(
+            content={"message": "Aucune recherche correspondante trouvée."},
+            status_code=404
+        )
     
     save_searches(updated_searches)
     user_stop_flags[request.search_id] = True
@@ -58,6 +64,24 @@ async def list_searches():
     Liste toutes les recherches en cours.
     """
     return load_searches()
+
+@app.post("/stop_all")
+async def stop_all_searches():
+    """
+    Arrête toutes les recherches en cours.
+    """
+    # Charger les recherches
+    searches = load_searches()
+
+    # Marquer tous les search_id comme stoppés
+    for search in searches:
+        search_id = search.get("id")
+        user_stop_flags[search_id] = True
+
+    # Vider (ou mettre à jour) la liste des recherches
+    save_searches([])
+
+    return JSONResponse(content={"message": "Toutes les recherches ont été arrêtées."}, status_code=200)
 
 @app.post("/reserve/padel-ground")
 async def reserve_padel_ground(request: ReservationRequest):

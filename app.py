@@ -24,10 +24,13 @@ if "api_calls" not in st.session_state:
     st.session_state.api_calls = []  # Liste pour suivre les appels API
 
 # API Endpoints
-PADEL_GROUND_API_URL = "https://botpadel-production.up.railway.app/reserve/padel-ground"
-PADEL_FACTORY_API_URL = "https://botpadel-production.up.railway.app/reserve/padel-factory"
-STOP_API_URL = "https://botpadel-production.up.railway.app/stop"
-
+#http://raspberrypi.tail3b5db3.ts.net:8080/
+#PADEL_GROUND_API_URL = "https://botpadel-production.up.railway.app/reserve/padel-ground"
+#PADEL_FACTORY_API_URL = "https://botpadel-production.up.railway.app/reserve/padel-factory"
+#STOP_API_URL = "https://botpadel-production.up.railway.app/stop"
+PADEL_GROUND_API_URL = "http://raspberrypi.tail3b5db3.ts.net:8080/reserve/padel-ground"
+PADEL_FACTORY_API_URL = "http://raspberrypi.tail3b5db3.ts.net:8080/reserve/padel-factory"
+STOP_API_URL = "http://raspberrypi.tail3b5db3.ts.net:8080/stop"
 # Fonction pour arrêter l'API
 # Fonction pour arrêter l'API
 def stop_api(username):
