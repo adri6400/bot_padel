@@ -7,32 +7,10 @@ import urllib.parse
 
 
 
-def validate_session(cookies, csrf_token):
-    """
-    Valide les cookies et le CSRF token en envoyant une requête test.
-    """
-    test_url = "https://padelfactory.gestion-sports.com/membre/reservation.html"
-    headers = {
-        "x-requested-with": "XMLHttpRequest",
-        "referer": "https://padelfactory.gestion-sports.com/membre/reservation.html",
-    }
-    session = requests.Session()
-    session.cookies.update(cookies)
-
-    try:
-        response = session.get(test_url, headers=headers)
-        if response.status_code == 200 and "reservation" in response.text:
-            print("Session valide.")
-            return True
-        else:
-            print("Session invalide.")
-            return False
-    except Exception as e:
-        print(f"Erreur lors de la validation de la session : {e}")
-        return False
 
 
-def login_and_get_csrf_token(email, password):
+
+def login_and_get_csrf_token_factory(email, password):
     """
     Effectue la connexion à l'application et récupère les cookies et le CSRF token.
     """
@@ -115,7 +93,7 @@ def get_payment_method_id(cookies, target_url):
         raise
 
 
-def reserver_padel(csrf_token, cookies, pm_id_param, date, hour, terrain_id):
+def reserver_padel_factory(csrf_token, cookies, pm_id_param, date, hour, terrain_id):
     """
     Tente de réserver un terrain.
     """
@@ -167,12 +145,12 @@ def main_padel_factory(login_url, target_url, username, password, terrains, date
 
 
     print("Récupération des nouveaux cookies et token...")
-    session_cookies, csrf_token = login_and_get_csrf_token(username, password)
+    session_cookies, csrf_token = login_and_get_csrf_token_factory(username, password)
     pm_id_param = get_payment_method_id(session_cookies, target_url)
 
     for terrain_id in terrains:
         time.sleep(3)
-        if reserver_padel(csrf_token, session_cookies, pm_id_param, date, hour, terrain_id):
+        if reserver_padel_factory(csrf_token, session_cookies, pm_id_param, date, hour, terrain_id):
             print("Réservation réussie !")
             return True
 

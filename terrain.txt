@@ -17,3 +17,12 @@ Pour le padel factory et gestion sport en general je voudrais je veux l'id du pa
 PADEL GROUND : 
 activities_id = ce8c306e-224a-4f24-aa9d-6500580924dc
 club_id = 9a3f194d-15c8-4fe5-b83c-51ebf3a388ce
+
+
+
+BRUYERES : 
+https://lesbruyeres.gestion-sports.com/connexion.php
+
+id sport : 372
+
+
